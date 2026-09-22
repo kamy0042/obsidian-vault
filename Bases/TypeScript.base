@@ -1,0 +1,23 @@
+filters:
+  and:
+    - file.hasTag("topic/技術/TypeScript")
+properties:
+  file.name:
+    displayName: Name
+  Created:
+    displayName: Created
+  Tags:
+    displayName: Tags
+  日付:
+    displayName: 日付
+  URL:
+    displayName: URL
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - Created
+      - Tags
+      - 日付
+      - URL

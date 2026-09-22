@@ -1,0 +1,28 @@
+# React - ビルドツール
+
+filters:
+  and:
+    - or:
+        - file.hasTag("topic/技術/React")
+        - file.hasTag("topic/技術/React/Nextjs")
+    - file.hasTag("topic/技術/ビルドツール")
+properties:
+  file.name:
+    displayName: Name
+  URL:
+    displayName: URL
+  Updated:
+    displayName: Updated
+  Tags:
+    displayName: Tags
+  Created:
+    displayName: Created
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - URL
+      - Updated
+      - Tags
+      - Created

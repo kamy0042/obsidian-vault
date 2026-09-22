@@ -1,0 +1,374 @@
+---
+Created: 2021-03-20T04:34:00
+URL: https://aloerina01.github.io/blog/2018-09-14-1
+Tags: [topic/技術/React, topic/技術/ソフトウェア設計]
+---
+Reactの良さを活かしやすいFluxは、Webアプリケーションの設計手法としてずいぶん馴染みのあるものになったように感じます。私もFluxを取り入れた開発を2年近く経験し、知見も溜まり、使い慣れたような気持ちでいました。
+
+が、使い始めた頃はもちろん、今でも何となく分かったつもりでいる部分があったり、複雑な実装が必要な場面で悩むことがあったりします。「Fluxはダメだ！うまく実現できない！」と投げ出したくなるときもありますが、そんなときこそ基礎へ立ち返る機会。
+ そんなわけでFluxに再入門し、**Fluxとは何なのか、どう実装するのが適切なのか**を[公式ドキュメント](http://facebook.github.io/flux/)に則って整理してみようと思います。
+
+### Fluxとは
+
+Fluxとは、**クライアントサイドのデータフローの設計パターン**です。
+
+![[2018-09-14-1-flux.png]]
+
+In Depth Overview - Fluxより
+
+Fluxの代名詞的なこの図でも示されている通り、Fluxは**データの流れを一方向に強制します**。そして一方向に流れるデータを受け取る/送る4つの登場人物(Action, Dispatcher, Store, View)が**どのようにデータを扱うかを定義する**ことで、アプリケーション内の見通しを良く保つ設計となっています。
+
+この一方向データフローは**イベント駆動**で実現されます。詳細は後述しますが簡単に流れをまとめると、
+
+- ボタンクリックなどをトリガーにして
+- **Action**と呼ばれるイベントとデータのかたまりが
+- **Dispatcher**と呼ばれるイベントハブに集約され
+- Dispatcherに登録されたCallbackによって**Store**の状態を更新し
+- そしてStoreの変更を検知した**View**が自身を更新します。
+
+このように、Fluxは**一方向データフロー**と**イベント駆動**を根幹とする設計手法となっています。これを念頭に置いた上で、Fluxの4つの役割がどういうものなのか考えていきます。
+
+### Dispatcher
+
+Dispatcherはアプリケーション全体で唯一のイベントハブです。イベント駆動であるFluxのコアであり、Fluxのデータフローを支えるための2つの要件を満たす必要があります。
+
+### 要件1 イベントが発生したらすべてのCallbackを実行すること
+
+Dispatcherは、`addEventListener`のように「特定のイベントに特定のCallbackを紐づける」のではなく、**何らかのイベントがdispatchされたら登録されている全てのCallbackを実行します**。その際、Callbackには**Payload**と呼ばれる「イベントに関する情報を持つオブジェクト」を引数として渡します。ここまでがDispatcherの役割です。
+
+Payloadに応じてStoreの中身をどう更新するか(または更新しないか)は、Callback側で判断することになります。
+
+ここまでをまとめると、Dispatcherとは「Callbackを登録し、イベントがdispatchされたら登録されたすべてのCallbackにPayloadを渡し実行する」ものであると言えます。コードで表現すると以下のようになります。
+
+```plain text
+class Dispatcher {
+  constructor() {
+    this.callbacks = [];
+  }
+  register(callback) {
+    this.callbacks.push(callback);
+  }
+  dispatch(payload) {
+    this.callbacks.forEach(callback => callback(payload));
+  }
+}
+
+const instance = new Dispatcher();
+export default instance;
+
+```
+
+余談ですが、Dispatcherは「アプリケーション全体で**唯一の**イベントハブ」なのでシングルトンで実装しています。
+
+### 要件2 Callbackの実行順序を制御できること
+
+Storeを更新する際、実行順序を意識しなければならない場面もあると思います。例えば「ユーザーの設定を更新して、それに応じて表示する情報を更新する」といったケースですね。これに対応することがDispatcherのもう一つの要件です。つまり**Callbackの実行順序を制御する**ことです。
+
+Fluxの設計手法を実現するための最小限のライブラリである[Flux Utils](http://facebook.github.io/flux/docs/flux-utils.html#content)で実例を確認してみます。Flux Utilsに実装されている[Dispatcher.js](https://github.com/facebook/flux/blob/master/src/Dispatcher.js)には`waitFor`という関数が定義されていて、これがCallbackの実行順序を制御しています。
+
+waitFor関数はCallbackの中から呼び出すもので、「あのCallbackの実行を待ってから自身を実行する」という制御をすることができます。
+
+```plain text
+const callback1 = (payload) => {
+  UserSettingStore.hoge = payload.hoge;
+}
+const callbackId1 = dispatcher.register(callback1);  // callbackを登録すると、識別子が発行されます
+
+const callback2 = (payload) => {
+  dispatcher.waitFor([callbackId1]);                 // UsdrSettingStoreの更新を待ちます
+  const userSetting = UserSettingStore.getState();   // UserSettingStoreの更新後に最新の状態を取得します
+  // do something
+}
+dispatcher.register(callback2);
+
+```
+
+1. DispatcherにCallbackを登録すると、Callbackの識別子が発行されます
+2. Callback内で`waitFor`を呼び出し、引数に実行を待ちたい識別子を渡します
+3. あとは同期的に処理を書くだけでOKです
+
+waitFor関数は実装の一例ですが、このようにCallbackの実行順序を管理できる仕組みを持っておくことが必要です。
+
+### Action
+
+### Actionに必要なたった2つのこと
+
+Actionは、そのアプリケーション内でどんなユーザーオペレーションが起きるのか(ログインする、登録する、等)を定義するものです。言い換えると**ユースケースを定義するもの**です。Actionの要件は以下の2つです。
+
+4. プレーンなオブジェクトであること
+5. ユースケースを表す`type`プロパティを持っていること
+
+とてもシンプルですね。ちなみにActionオブジェクト内に定義される`type`は一般的に**ActionType**と呼ばれます。
+
+また、Actionには`type`プロパティ以外に、ユースケースを実行するために必要な値を持たせることもできます。以下のコードはTODOアプリの「TODOを追加する」Actionの実装例です。
+
+```plain text
+const todoAction = {
+  type: 'ADD_TODO',  // ActionType
+  text: 'hoge'       // 新しく追加するTODOの文字列
+}
+
+dispatcher.dispatch(todoAction);  // actionをdispatcherにわたす
+
+```
+
+このActionがDispatcherに渡されることで、Fluxのデータフローが始まります。
+
+### ActionCreator
+
+実際のコードでは、Actionを生成しDispatcherに送るまでの一連の処理を行うヘルパーメソッドを実装するケースが多く、このヘルパーメソッドを**ActionCreator**と呼びます。
+
+```plain text
+import ActionTypes from './ActionTypes';
+import dispatcher from './Dispatcher';
+
+const addTodo = (text) => {
+  const action = {
+    type: ActionTypes.ADD_TODO,  // 定数化されたActionType
+    text: text
+  };
+  dispatcher.dispatch(action);
+};
+
+```
+
+### Flux Standard Action
+
+Flux思想のライブラリのひとつである[Redux](https://redux.js.org/)では、「Actionとはこう実装すべき」という指標を定義しています。それが[Flux Standard Action (FSA)](https://github.com/redux-utilities/flux-standard-action)です。
+
+FSAは「読みやすさ」「使いやすさ」「シンプルさ」をコンセプトとし、上述の2つの要件に加え4つのルールを設けています。
+
+- Actionは`payload`プロパティを持つことができる
+- Actionは`error`プロパティを持つことができる
+- Actionは`meta`プロパティを持つことができる
+- Actionは`type`, `payload`, `error`, `meta`以外のプロパティを持ってはいけない
+
+`type`プロパティはActionTypeのことですね。「typeは`===`を使って同じものか判定できるべきだ」と定義していますが、一般的にActionTypeはStringで実装することが多いと思うので、特に意識する必要はなさそうです。
+
+FSAにおける`payload`プロパティは今まで説明してきた「Payload」より狭義です。先述したPayloadは「Dispatcherに渡されるもの」であり、つまりActionオブジェクトそのものを指していました。それに対してFSAのPayloadは「Actionの実行に必要な値」のみを指しています。「TODOを追加する」Actionの例でいうと、`text`部分のみがPayloadということになります。
+
+```plain text
+{
+  type: ActionType.ADD_TODO,
+  payload: {
+    text: 'hoge'
+  }
+}
+
+```
+
+FSAにおける`error`プロパティは、エラーが起きたことを通知するために`true`をセットして使います。「エラーであることを正常時と同じ方法で伝達する」という点で`Promise.reject`に似ている、と説明されています。`error: true`のときは`payload`にはエラーオブジェクトを詰めるのが一般的な用法です。
+
+FSAにおける`meta`プロパティは、`payload`に詰めるべきでないものを持つための補助的なものです。
+
+以上がFSAのルールです。
+ FSAはReduxを使う上で守るべきものですが、Redux以外の方法でFlux設計をする場合でも選択肢のひとつとして検討してみるといいと思います。
+
+### Store
+
+### Storeの役割
+
+Storeは**アプリケーションのState(状態)**と、**それを操作するロジック**を持ちます。これだけ聞くとMVW(Whatever)のModelにも似ていますが、いくつか大きく異なる点があります。
+
+- getterのみを持ち、setterを持たない
+- setterの代わりにStoreを更新するための関数を持ち、それをDispatcherのCallbackとして登録する
+- Storeが変更されたら、イベントを発火し変更をViewに伝える
+
+```plain text
+import ActionTypes from './ActionTypes';
+import dispatcher from './Dispatcher';
+
+class TodoStore {
+  constructor() {
+    this.state = {
+      todo: [],
+      done: []
+    };
+    dispatcher.register(this.update.bind(this)); // CallbackをDispatcherに登録
+  }
+
+  // getter
+  getState() {
+    return this.state;
+  }
+
+  // Storeが持つStateを更新するための関数
+  update(action) {
+    switch(action.type) {
+      case ActionTypes.ADD_TODO:
+        const nextState = Object.assign({}, this.state);
+        nextState.todo.push(action.text);
+        this.state = nextState;
+        break;
+    }
+    this.emit();  // Store内のStateが更新されたらイベントを発火
+  }
+}
+
+```
+
+このように、Storeが保持する値を直接更新する方法(Setter)は存在しません。Storeが持つ値をひとまとめの`State`とみなし、**どのような条件でどのようにStateを更新するかを定義している**関数が実装されています。Dispatcherの説明時に度々登場した「Callback」は、Storeで実装されるというわけですね。
+
+ここまでの話をまとめると、**何らかのActionがDispatcherに渡されると、Dispatcherに登録されているすべてのCallbackが実行され、そのCallbackが各々のStoreを更新していく**ということになります。
+
+ここまでで「どのようにViewを変更するか」の話が出ていないことからも分かるように、Viewとロジックは完全に切り離されることになります。アプリケーションの状態を変更するレイヤーでは「どのように状態を変えるか」にのみ専念すれば良く、変更後の状態に応じてViewをどのように変えるかはView側が気にかければ良いというわけです。
+
+ただし、実際にはStoreがViewの状態を保持しなければならない場面も出てくると思います。つまりSoteには「アプリケーションの状態を保持するStore」と「Viewの状態を保持するStore」という2種類が存在するということになります。 とはいえこれは公式ドキュメント外のお話。また別の機会に考えをまとめてみようと思います。
+
+### InitialStateの実装
+
+ViewはStateを取得するためにStoreのgetterを叩きます。ただ、初期描画時にはStoreが空っぽなので、初期値を定義しておく必要があります。上の実装例では`constructor`の中で初期値を定義していますが、別の関数としてくくり出しておくのが一般的です。
+
+```plain text
+class TodoStore {
+  getInitialState() {
+    return {
+      todo: [],
+      done: []
+    }
+  }
+  getState() {
+    return this.state || this.getInitialState();
+  }
+}
+
+```
+
+### Reduceの実装、そしてImmutableState
+
+Stateを更新するCallbackの実装方法においても、一般的に良しとされているパターンがあります。それが**Reduce関数**です。Reduce関数は**現在のStateとPayloadを受け取り、新しいStateを返す純粋関数**です。
+
+```plain text
+class TodoStore {
+  reduce(currentState, action) {
+    switch(action.type) {
+      case ActionTypes.ADD_TODO:
+        const nextState = Object.assign({}, currentState);
+        // do something
+        return nextState;
+      default:
+        return currentState;
+    }
+  }
+}
+
+```
+
+こうすることでStoreのテストがしやすかったり、データの更新ロジックの周りに副作用が起きにくかったり、`dispatcher.waitFor`などと組み合わせても煩雑にならず可読性の高い状態を維持できたり…といったことが期待されます。
+
+Reduce関数と併せて、**StateをImmutableにする**実装パターンもよく使われます。Reduce関数以外のところで意図せずStateが書き換えられてしまうことを防ぎ、堅牢性を高める手法です。
+
+Flux Utilsの[FluxReduceStore.js](https://github.com/facebook/flux/blob/master/src/stores/FluxReduceStore.js)は、これらのパターンを組み込んだStoreを実装するためのライブラリです。このStoreを継承したStoreを実装すると、自然に由緒正しきStoreを実装することができます(できました)。
+
+### View
+
+Fluxにおける「View」という役割には、実は2つの登場人物が含まれます。
+
+- 状態を持たない**Views** (役割としてのViewと区別するために複数形で表現しています)
+- Storeとのパイプラインとなり状態を受け取る**Controller-Views**
+
+### 状態を持たないViews
+
+Fluxにおける「View」の基本的な役割はシンプルで、**外から状態を受け取り、テンプレートにはめ込み表示する**のみです。これが「自身では状態を持たない」ということです。
+
+ReactComponentで表現すると、**Stateを持たず、Propsを受け取るだけのComponent**です。[**Functional Component**](https://reactjs.org/docs/components-and-props.html#functional-and-class-components)を使って実装します。
+
+```plain text
+function TodoComponet(props) {
+  return <input type="checkbox" checked="{props.isDone}">{props.text}
+}
+
+```
+
+このように関数としてComponentを定義するのがFunctional Componentです。
+ 従来のClass Componentと違いStateを持ったりインスタンス変数を持ったりできず、「propsを受け取る」機能だけを持つComponentです。そのためViewsの役割を明示的に守れるので、推奨されています。
+
+とはいえ、Viewsが状態を絶対持ってはいけないというわけではなくて、Component内で完結する「表示に関わる状態」を持つことは可能です。Reactで実装する場合は、Class Componentとして実装します。
+
+```plain text
+class TodoListComponent extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      isEmpty: false
+    }
+  }
+  /* 略 */
+}
+
+```
+
+これらのComponentをツリー状に組み合わせて(つまりReactの一般的な用法で)FluxのViewは構成されます。ツリーの上から下へとpropsのバケツリレーをしながら状態を渡して、画面に要素を表示していくわけです。
+
+### Storeとのパイプラインとなり状態を受け取るController-Views
+
+ViewsだけではStoreの情報を受け取る仕組みがありません。これを担うのが、**ツリーの最上部に配置される(つまりルートComponentとなる)Controller-Views**です。具体的な要件は2つです。
+
+6. Storeの変更を監視する
+7. StoreからStateを取得し、Viewsに流し込むStateを形成する
+
+Flux UtilsではController-Viewsを**Container**と呼んでいて、ReactComponentをベースにContainerを生成する[FluxContanier.js](https://github.com/facebook/flux/blob/master/src/container/FluxContainer.js)が用意されています。
+
+```plain text
+import TodoStore from './TodoStore';
+import HogeStore from './HogeStore';
+
+class RootComponent extends React.Component {
+  // 1. 変更を監視するStoreを列挙する
+  static getStores() {
+    return [ TodoStore, HogeStore ];
+  }
+
+  // 2. Viewsに流し込むStateを生成する
+  static calculateState() {
+    return {
+      todoState: TodoStore.getState(),
+      hogeState: HogeStore.getState()
+    }
+  }
+
+  // 3. ViewsのpropsにStateを流し込む
+  render() {
+    <ChildComponent {...this.state} />
+  }
+}
+
+// 4. Container化する
+export default Container.create(RootComponent);
+
+```
+
+FluxContainerを使ったController-Viewsの実装例です。
+
+FluxContainerとFluxStoreとつなぎ込むため、2つのstaticメソッドが用意されています。`getStores`で変更を監視するStoreを決め、Storeが変更されたら呼出される`calculateState`でViewsに流し込むStateを形成します。このStateはComponentの`state`にセットされるので、あとは通常のReactComponentのようにRender関数で子Componentへ渡せばOKです。
+
+ちなみにFluxContainer.js内で`import`されている[FluxContainerSubscriptions.js](https://github.com/facebook/flux/blob/master/src/container/FluxContainerSubscriptions.js)に「①Storeの変更を監視する」ロジックがまとまっていて参考になりました。
+
+### Viewのまとめ
+
+- Fluxの「View」には2つの登場人物がいる
+- 状態を持たないViews 
+    - 原則`state`を持たないReactComponent
+    - Functinal Componentで実装することが推奨されている
+    - 表示に関する状態を持つ場合はClass Componentで実装する
+- Storeとのパイプラインとなり状態を受け取るController-Views
+
+### 私がFluxを採用する理由
+
+Fluxを利用することで得られた一番のメリットは「チーム開発において破綻しにくいこと」でした。
+
+複数人で開発しているとアプリケーションの成長スピードが早く、コード量はどんどん増えていきます。時期が過ぎれば「特定の機能を一新する」なんて場面も出てきたりします。そのような場面でも影響範囲が最小限に抑えられ、ベースの設計が破綻することなく対応し続けられたと感じています。
+
+Fluxは現代のWebアプリケーションでよくある**複雑なUIとデータ構造を持つアプリケーション**を想定して作られています。それ故、アプリケーションが肥大化しても各Moduleの責務が分離されていて、互いに疎結合で、一部の修正が他に影響せず、堅牢なアプリケーションを維持することが(比較的)しやすくなるわけですね。
+
+また、誰が実装しても大きなバラツキが生じにくかったという点でも、破綻しにくさが感じられました。「状態をどこで管理するべきか」「ビジネスロジックをどこに書くべきか」といったような実装の差(もしくは迷い)は、MVWで実装してたときに比べ少なかったように感じます。
+ MVWのほうがドメイン層やアプリケーション層の柔軟さ・解釈の広さ等があるからかもしれません。
+
+まとめると、Fluxの破綻しにくさとは、①明確に責務が分離された設計思想であること、②どこに何を実装するかという迷いや個人差が少なくなること、にあると感じています。もちろんFluxのメリット・デメリットの体感には個人差がありますが、これが私がFluxを採用する理由です(MVWも好きですし、もちろん時と場合によってそちらを採用することもあります)。
+
+### おわりに
+
+FluxはWebアプリケーションの設計方法の選択肢として今後も利用されていくのだと思います。でもFluxは完璧ではありません。
+ Fluxの問題点や苦手分野については様々なところで議論されている通りで、基本的な用法では対応しきれない場面も出てくると思います。非同期処理、複雑なドメイン層の表現、アニメーション…、他にも課題はいろいろです(体感的には山盛りです)。が、それらに立ち向かうためにも、まずは基礎を100％理解していることが必要だと思います。
+
+そんなわけで今回はFlux再入門の話でした。気になる箇所や間違っている箇所がありましたら[@aloerina_](https://twitter.com/aloerina_)までご連絡ください。

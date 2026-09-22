@@ -1,0 +1,94 @@
+---
+title: "The Gulf Between Design and Engineering"
+source: "https://designsystems.international/ideas/the-gulf-between-design-and-engineering/"
+author:
+published: 2023-11-06
+created: 2026-04-13
+description: "A practical guide to better product development workflows between design and engineering"
+Tags: [topic/デザインシステム/運用・浸透, topic/組織/ハンドオフ, topic/組織/組織文化]
+---
+![Cover](https://designsystems.international/static/63aa22274740b73026ada0fbbee51d52/33227/cover.webp)
+
+Over the past few decades, a whole new range of digital experiences have become central to our daily lives. Our professional and personal tools are now cloud-based services, we have seen the first mass market devices controlled entirely by voice, and recent developments in artificial intelligence have yet again changed how we interact with computers. This has also caused one of the most significant, recent developments in the business world, which is the transformation of every large business into a technology company. Creating digital experiences that make sense for humans depends heavily on the work of both designers and engineers, so many companies – even those outside the traditional tech circle – have invested in their own digital product teams, which in turn has created a wealth of opportunities to define healthy and productive ways of creating these digital products.
+
+However, I believe the way most organizations produce digital products is fundamentally broken. The elephant in the room is a dated understanding of the role of both design and engineering, which in turn shapes how organizations hire, manage, and produce digital things. These companies invest billions of dollars building teams, processes, and tools on top of an immature discipline and an outdated waterfall model that ends up being detrimental to productivity, team happiness, and ultimately, the resulting experiences we bring to life. In this article, I will try to explain how these things go wrong, why they go wrong, and how we can define better workflows when building digital products.
+
+## “Ready for dev”
+
+It’s safe to say that there is a natural tension between the fields of design and engineering. Traditionally, the role of design is to question, create meaning, and to argue for solutions that make for a better user experience. The role of engineering is to systematize, solve technical problems, and to argue for solutions that make for a simple, scalable, and future-proof implementation. The design process begins before we know what we want, and engineering usually happens when there is a clear notion of what is being built.
+
+These differences are also reflected in the tools we use. Most product designers today work in tools such as Adobe Illustrator, Sketch, or (Adobe) Figma which are very much modeled on manual processes that came before the computer. They are primarily tools for exploring and finessing static design options but they have now evolved to become complex, domain-specific programming environments that facilitate the creation of interactive prototypes. Still, they lack the kind of automation known from software development. Engineers work in another closed ecosystem of programming tools that feel as foreign to designers as a drawing program does to an engineer. These tools are often command-line based and require deep insights into software development processes simply to get them running on your local machine.
+
+> The most crucial mistake in the collaboration between designers and engineers happens when we conflate this division of tools with a need for a strong division of labor.
+
+The most crucial mistake in the collaboration between designers and engineers happens when we conflate this division of tools with a need for a strong division of labor. Treating design and engineering as two completely separate processes leads to an isolated waterfall workflow where designers first get to dream up ideas in static tools, and engineers then implement the desired features when they are ready for development. The design handover, this supposedly magic moment where design has finished and engineering begins, is the root cause of many of the collaboration problems that product teams have. The process is extremely slow because designers build complex prototypes that are completely detached from the complex systems developers build. This approach effectively doubles the work while also affecting the quality of the product. When the initial phases exclude viewpoints from engineering, it’s harder to make early decisions that can improve the outcome of the project. Likewise, when designers are not an integral part of the development process, they miss integrating crucial design decisions that could not be anticipated in a static simulation, and risk losing focus on the user experience for the betterment of a simpler codebase or a faster sprint cycle. All in all, the waterfall process between design and engineering makes for bad digital products that take a long time to build.
+
+## Where organizations fail
+
+Unfortunately, this gulf between design and engineering often widens when leadership tries to come up with solutions to the problems that arise during the waterfall process. It’s hard to blame managers for wanting to introduce new systems when organizations struggle so mightily with innovation that many leaders silently deem it impossible to bring new features into their digital products. Common attempts at solving these design-to-engineering workflows include new ticketing systems, project management rules that dictate how long a team can spend on a certain task, and more management oversight and reporting. But these initiatives often end up creating more work for teams which lowers productivity even further. It’s no wonder product teams are unhappy and productivity is low.
+
+A more recent way to solve these problems is to introduce a design system. This often involves creating a new team of designers and engineers, who are responsible for publishing a library of UI components which can be consumed by other teams in the organization. The promise is to drastically reduce the time needed to design new functionality because product teams can focus on the truly unique pieces of functionality and rely on default components for the rest. Unfortunately, these projects often do more harm than good if the organization uses the design system as yet another initiative to centralize the decision-making process without considering the workflows needed to ensure a healthy adoption and long-term success. If a design system fails to nurture healthy contributions from across the organization, it will be yet another bottleneck that prevents product teams from doing good work, and it will frustrate teams even further.
+
+![](https://designsystems.international/static/b045fbb108bf79b0da3a1fac4f3288de/33227/automate.webp)
+
+## Implementing better workflows
+
+My team and I have spent the last many years solving these exact problems for design and engineering teams in larger organizations who are trying to build digital products with speed and quality. From these projects, a core set of ideas have emerged, and the solution surprisingly doesn’t involve sending your entire design team to coding school (although [it wouldn’t be a bad idea](https://programmingdesignsystems.com/)) or unifying around a single tool. Rather, we encourage teams to solve these problems by treating the ambiguity of their tools and workflows as a strength, and at the same time double down on facilitating cross-pollination between design and engineering throughout the entire digital product lifecycle. We have compiled these findings into a small list of principles that we apply on almost every project:
+
+1. Flatten your waterfalls
+2. Make code the design product
+3. Operate like an open source project
+4. Increase visibility through automation
+5. Plan like a farmer
+
+### 1\. Flatten your waterfalls
+
+A key allegory we use to describe our desired workflow is that of moving from a waterfall to a river. A waterfall process is defined by going through a series of discrete and sequential phases, flowing like steps in a waterfall, where each stage has a deliverable that is handed off to the team responsible for the next phase. We replace this rigid structure with the idea of a river, which is a continuous flow moving in a clear direction, where obstacles along the way will affect the flow temporarily, making it move backwards or in circles, until it finds its way forward to continue in the desired direction.
+
+The real-life consequence of this shift is that designers and engineers work together from the very beginning to the very end of a project. This is because design and engineering are complementary processes that will be needed at any point in the project, and this setup makes it possible to move more effectively between the two with a much tighter feedback loop. This also breaks the monopoly of creativity away from the designers, which actually broadens the impact of design as a shared process of knowledge generation.
+
+> Everybody designs sometimes, nobody designs always. Design is not the monopoly of those who call themselves designers
+
+— Horst Rittel, The Reasoning of Designers
+
+The common reaction from client leadership is how much more costly this setup will be. Involving engineers earlier in the process and designers later in the process will take up many more budget hours, they say. However, a tightly integrated process will actually do the opposite. Since we understand that there is no way of preventing the dance between design and engineering, it’s much better to do it often and in an agile way than in a single, monolithic way further down the line. These same clients will often end up reorganizing their teams around areas of focus rather than capabilities when they see just how effective their teams become with this setup.
+
+![](https://designsystems.international/static/5032d036bc266cb2d7544eb09b197707/33227/integrated.webp)
+
+### 2\. Make code the design product
+
+A crucial principle that goes along with this change in workflow is to think of the digital product as the actual design product. This might sound like an odd statement, but it’s surprising how many design teams run like their Figma files are the real design product. “The product is in Figma”, or “we need help translating our design system to code” are not rare things to hear, and the implication of such a statement is that designers try to perfect every little design detail without any technical validation, which widens the gulf between idea and reality considerably because work is being done in silos. We tell these clients that their time could be better spent by moving early into code to have a design process focused on real components. Thinking of the digital product as the real design product is an organizational statement that code is the material we’re building from, and that modern applications are way too complex to simulate in static, page-based design tools.
+
+> Thinking of the digital product as the real design product is an organizational statement that code is the material we’re building from, and that modern applications are way too complex to simulate in static, page-based design tools.
+
+This is not to be mistaken as a way to favor engineering or to remove the ability for designers to polish design details in their own tools. It’s actually quite the opposite as it enables a design-driven engineering culture because teams no longer work under the assumption that a Figma file is a deliverable. With the proper documentation, collaboration, and workflows, designers will begin to understand more about the medium they are designing for, and engineering will learn the benefits a design-driven process brings. It can be especially liberating for designers because they are freed from manual, repetitive tasks that involve mocking up every single design detail, which is time they can instead spend on questioning, ideating, and communicating intent via their design tools independent of whether the project is in “design” or “development” mode. By making code the design product, we embrace the ambiguity of our tools and apply them deliberately when needed with a common goal of landing the design changes quickly in the codebase.
+
+A key question is whether it makes sense to keep a duplicated set of components in both code and design tool. There is no single answer to this as it depends on the size of the organization and the maturity of the components, but we always start from the understanding that the source of truth is in the code, and the Figma components are a utility for the creative process. We generally don’t recommend duplication of efforts in the early stages of this new collaboration workflow as it is often faster to update the Figma components to match the code when needed rather than trying to keep everything in sync at all times. Of course, as the design system matures, we most certainly recommend having the components available in Figma – and detailing a workflow for bringing component updates into these Figma files. Having a shared vocabulary of what you want to achieve is much more important than having shared pixel perfection across tools.
+
+![](https://designsystems.international/static/144c1d4cba1211cc166aa7ea4a147436/fb217/open-source.webp)
+
+### 3\. Operate like an open source project
+
+Too often, companies invest in design systems teams to speed up the production process but end up with yet another isolated step in the waterfall workflow that further slows down the work. We have realized that some of the most successful product teams do indeed have a library of shared components, but the maintenance and collaboration around this design system is deliberately open to the point that they mimic some of the most popular open source projects.
+
+This has little to do with whether the code itself is open source or not. What is more important is how accessible these design systems are in terms of adapting to changes needed from the organization. Really great design systems have a core group of stakeholders who oversee the direction of the project, but mostly spend their time prioritizing work, helping adoption, and facilitating contributions from across the organization – including from collaborators in the design systems team. Many companies do an adequate job of documenting how to consume the design system components, but far fewer prioritize the documentation, workflows, and tooling needed to accept contributions from people outside the design systems team. Only when this has been done, a library of shared components can turn into a system of shared practices that help organizations work faster and better around the creation of digital products.
+
+### 4\. Increase visibility through automation
+
+One of the first things we do in any project is to set up a continuous deployment workflow where pull requests are automatically deployed and posted to Slack. We have found it to be an easy way to make the engineering process accessible to all — especially designers, and it’s a part of an “automate everything” mantra that greatly helps bridge the gap between design and engineering. The idea is to automate every manual task in order to free up time, make work accessible across the organization, and minimize the risk of bottlenecks.
+
+Developers are fairly used to automating their workflows, so the bigger task is often to figure out how to apply these same principles to the design workflow, so everyone has access to the latest design work and can easily get the assets they need. But what does it even mean to automate parts of the design process? We first focus on every place where design elements are consumed by code, and we make processes to automate the creation of these elements. This can be as simple as a good naming convention in Figma with the proper export settings for a set of icons, or a more complicated setup with custom Figma plugins or web-based design tools to export SVG, PNG or MP4 assets. We believe so much in this concept that we have developed an [open source framework for automating design operations](https://mechanic.design/), and we use this to free up time for design teams and make their decision and progress transparent to everyone else.
+
+![](https://designsystems.international/static/c8a6d7112c4657e130564465d2c09502/33227/farmer.webp)
+
+### 5\. Plan like a farmer
+
+Agile is all around us, but few agile processes actually manage to make teams work faster and better. Scrum, sprints, and points have taken over as micro-frameworks that double down on the division of labor with a rigid ideology about who is supposed to work when. These agile processes are often introduced by businesses to gain clarity over work being done, but they don’t change the fact that estimating large software projects is notoriously difficult. After all, the map is not the territory, and workflows that require a great deal of estimation up front introduce a duplication of work and make it less likely for designers and engineers to collaborate in an agile way. Although estimates are often necessary, a guiding principle should be that a team’s energy is better spent creating things rather than estimating, planning, and scoping.
+
+> A farmer that who would stick rigidly to plan, instead of sensing and adjusting to reality, would quickly grow hungry
+
+— Frederic Laloux, Reinventing Organizations
+
+In the book [Reinventing Organizations](https://www.reinventingorganizations.com/), which I highly recommend for anyone interested in these ideas around collaboration, Frederic LaLoux introduces the idea that organizations should think like farmers. It makes no sense for a farmer to plan the harvest date at the beginning of the season, so they often end up having a years-long perspective but planning only for the next day. Organizations can learn from this by letting go of this obsession over fixed delivery dates and instead build a capacity to sense and respond, which will steer them towards much healthier outcomes. For product teams, this means staying true to a fully agile, collaborative workflow that replaces an illusion of control with an actual control in the form of the ability to change directions as we go – which in turn will help facilitate moving between design and engineering processes when needed.
+
+These are just a few of the principles that we have found to bridge the gulf between design and engineering. In upcoming posts, I’ll focus on the interesting side effects we have seen from teams implementing these principles, including how this approach places design at the heart of digital business and how it helps break the monoculture in digital design. Until then, you can find a lot more details in our case studies.

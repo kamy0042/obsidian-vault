@@ -1,0 +1,19 @@
+# 要件定義
+
+filters:
+  and:
+    - file.hasTag("topic/技術/要件定義")
+properties:
+  file.name:
+    displayName: 名前
+  タグ:
+    displayName: タグ
+  作成日時:
+    displayName: 作成日時
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - タグ
+      - 作成日時

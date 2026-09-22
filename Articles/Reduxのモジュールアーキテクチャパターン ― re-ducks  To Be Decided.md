@@ -1,0 +1,74 @@
+---
+Created: 2021-06-07T22:38:00
+URL: https://www.kaitoy.xyz/2020/05/27/re-ducks/
+Tags: [topic/技術/React, topic/技術/ソフトウェア設計]
+---
+[react](https://www.kaitoy.xyz/tags/react) [redux](https://www.kaitoy.xyz/tags/redux) [re-ducks](https://www.kaitoy.xyz/tags/re-ducks)
+
+![[redux.png]]
+
+- Actionの定義や生成処理
+- Reducer
+- Storeの生成処理
+- Saga
+- etc.
+- src/
+    - actions/
+        - userActions.ts
+        - articleActions.ts
+    - reducers/
+        - userReducers.ts
+        - articleReducers.ts
+    - sagas/
+    - store/
+    - …
+- src/
+    - state/
+        - ducks/
+            - user/
+                - actions.ts
+                - reducers.ts
+                - sagas.ts
+            - article/
+                - actions.ts
+                - reducers.ts
+                - sagas.ts
+- src/
+    - views/
+        - atoms/
+            - buttons/
+                - OKButton.tsx
+                - CloseButton.tsx
+            - FormContainer.tsx
+        - molecules/
+        - organisms/
+            - user/
+                - UserFormContents.tsx
+            - article/
+        - ecosystems/
+            - user/
+                - UserForm.tsx
+            - article/
+        - natures/
+            - user/
+                - UserFormView.tsx
+            - article/
+                - ArticleListView.tsx
+        - hooks/
+    - state/
+        - store.ts
+        - ducks/
+            - index.ts
+            - app/
+            - ui/
+            - user/
+                - index.ts
+                - actions.ts
+                - apis.ts
+                - reducers.ts
+                - models.ts
+                - sagas.ts
+                - selectors.ts
+                - watcherSagas.ts
+            - article/
+    - utils/

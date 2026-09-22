@@ -1,0 +1,22 @@
+# テスト
+
+filters:
+  and:
+    - file.hasTag("topic/技術/テスト")
+properties:
+  file.name:
+    displayName: Name
+  URL:
+    displayName: URL
+  Created:
+    displayName: Created
+  Tags:
+    displayName: Tags
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - URL
+      - Created
+      - Tags

@@ -1,0 +1,240 @@
+---
+Created: 2022-01-26T16:54:00
+URL: https://engineering.linecorp.com/ja/blog/uit-baseline-for-front-end-development-in-2022/
+Tags: [topic/技術/フロントエンド]
+---
+**TL;DR:***2022にフロントエンド開発で最も考慮すべきユーザー環境は、パフォーマンスでは低スペックのAndroid端末、標準使用では2年前のSafari、そしてネットワークでは４Gです。それに対してはJSへの過剰依存などが原因で主にパフォーマンスの面でのウェブ全体の対応がよくありません。*
+
+こんにちは！LINEフロントエンド開発室のダバロス アランです。この記事のタイトルを見て「釣りタイトルですね〜」と考えている方がいると思いますが今回に限ってはそれを多めに見てください。それはなぜかと言いますと、2021年から2022年にかけて私たちフロントエンドエンジニアが全体的に考え方を改める必要が出るほど大きな変化がありました。
+
+その変化とそれに対して私たちフロントエンドエンジニアがちゃんと応えられるているかを色々なデータを見て分析したいと思います。
+
+## **2021年にあった最大の変化 ~ Internet Explorerのリタイア**
+
+2021年には色々な変化はありましたがInternet Explorer(以下 IE)がついにリタイアされることになりました。それは2021年5月にMicrosoftが正式に発表し、8月にはMicrosoft 365を始め複数のMicrosoftのプロダクトが正式にIEのサポートを切りました。予定では、正式リタイアは2022年6月となっていますが、今となってはIEがすでにリタイアも同然になっている理由は他にあります。
+
+### **Webの巨大サイトがIEのサポートを切る**
+
+Microsoftの発表の後に様々なプロダクトがIEのサポートを切ることを発表しました。その中にはWebのユーザーがほぼ全員が使うほど大きなサイトが含まれています。
+
+例えば、[Google検索が2021年10月にはIEをサポートしなくなりました](https://twitter.com/cramforce/status/1443962459723755533)。
+
+Twitter @cramforce
+
+![[Google-Support.png]]
+
+日本で言えば、[Yahoo! JAPANが2021年9月からIEを非推奨ブラウザーにしました](https://support.yahoo-net.jp/PccYjcommon/s/article/H000011350)。
+
+“Yahoo! JAPANの推奨ブラウザー” より
+
+![[Yahoo-Support.png]]
+
+さらに、[Webの33%以上のサイトに使われているWordPress](https://almanac.httparchive.org/en/2021/cms#top-cmss)までも2021年7月にリリースされた [WordPress 5.8からIEのサポートを切りました](https://wordpress.org/news/2021/05/dropping-support-for-internet-explorer-11/)。
+
+![[Wordpress-Support.png]]
+
+### **IEの現在のシェア率**
+
+上記の発表をIEの正式リタイア日まで待たなかったのには理由があります。IEのシェア率が2021年中に大きく減少しました。
+
+![[Global-Browser-Share-Pie.svg]]
+
+Graph derivative of “Browser Market Share Worldwide” by Statcounter used under CC BY-SA 3.0. This graph is licensed under CC BY-SA 3.0 by Alan Dávalos.
+
+![[Japanese-Browser-Share-Pie.svg]]
+
+Graph derivative of “Browser Market Share Japan” by Statcounter used under CC BY-SA 3.0. This graph is licensed under CC BY-SA 3.0 by Alan Dávalos.
+
+グローバルで言えばIEの現在のシェア率はすでに0.5%以下になっています。そして、世界に比べてずっとIEのシェア率が高めだった日本でもIEのシェア率が2%近くになっていて、減少傾向が続いています。
+
+## **フロントエンド開発の新しいベースライン**
+
+今まではシェア率が高めだったためサポートし続けていたIEは、すでにサポートする理由が皆無になっています。しかし、ここで一つ問題が生じます。今までは多くのツールのサポートのベースラインがまさにIEでした。IEは長い間開発がほぼ止まっていたため、モダンと呼ばれるようなブラウザーに比べて対応しているWebの標準仕様の差が大きいです。
+
+IEがなくなったことで、ツールのためのベースラインが少々ボヤけてしまいます。なので、現在のユーザーが使っている端末の状況を様々な目線から見て、自分なりに新しいベースラインを定義します。
+
+### **ユーザーの端末とブラウザーについて**
+
+### **ブラウザーやOSのシェア率**
+
+まずは先ほどのブラウザーシェア率のデータを違う形式で見てみましょう。
+
+![[Global-Browser-Share-Bar.svg]]
+
+Graph derivative of “Browser Market Share Worldwide” by Statcounter used under CC BY-SA 3.0. This graph is licensed under CC BY-SA 3.0 by Alan Dávalos.
+
+![[Japanese-Browser-Share-Bar.svg]]
+
+Graph derivative of “Browser Market Share Japan” by Statcounter used under CC BY-SA 3.0. This graph is licensed under CC BY-SA 3.0 by Alan Dávalos.
+
+ここで見てもらいたい傾向は二つあります：
+
+1. 対応すべきブラウザーのエンジンは3つです：ChromeとEdgeとSamsungとOperaの元であるChromium、Firefoxの元であるGecko、そしてSafariの元であるWebkit。
+2. 日本でのSafariの比率はグローバルに比べて高いです。
+
+先ほどの2点目の理由はこちらのデータを見ればすぐに分かります。
+
+![[Global-Mobile-OS-Share.svg]]
+
+Graph derivative of “Mobile Operating System Market Share Worldwide” by Statcounter used under CC BY-SA 3.0. This graph is licensed under CC BY-SA 3.0 by Alan Dávalos.
+
+![[Japanese-Mobile-OS-Share.svg]]
+
+Graph derivative of “Mobile Operating System Market Share Japan” by Statcounter used under CC BY-SA 3.0. This graph is licensed under CC BY-SA 3.0 by Alan Dávalos.
+
+ご覧の通り、グローバルではモバイルOSで言えばAndroidは70%ほどのシェア率を持っていてiOSは28%ほどを持っています。しかし、日本で言えばシェア率はほぼ真逆です。Androidは33%ほどを持っているのに対してiOSは66%ほどを持っています。
+
+### **CPUパフォーマンスの違い**
+
+OSの違いはソフトウェアの面だけでなく、ハードウェアの面でも様々な影響があります。 その一番の違いと言っていいのはCPUパフォーマンス。
+
+![[Performance-Multi.png]]
+
+![[Performance-Single.png]]
+
+[“The Mobile Performance Inequality Gap, 2021” – Alex Russell](https://infrequently.org/2021/03/the-performance-inequality-gap/#mind-the-gap) より
+
+上記のグラフの通りiOS端末は毎年CPUの一番いいパフォーマンスを出しています。それに反して、高スペックのAndroid端末ならなんとか近い数字を出していますが、中スペックや低スペックの端末となりますと桁違いにCPUのパフォーマンスが劣ります。 [グラフの情報源である記事](https://infrequently.org/2021/03/the-performance-inequality-gap/#mind-the-gap)の作者Alex Russellさんの言葉を借りますと：
+
+> 2020年の高スペックAndroid端末は2017年リリースのiPhone 8と同等のシングルコアパフォーマンスを有しています。
+> 中スペックのAndroid端末は2014年のiPhone 6より若干早いです。
+> 
+> 低スペックのAndroid端末はやっと2012年のiPhone 5に追いつきました。
+
+### **ブラウザーの標準仕様の対応**
+
+ブラウザーの違いが一番フロントエンド開発に影響する部分は、なんと言ってもWebの標準仕様に対する対応の有無。先ほど話した通り、現在気にするべきブラウザーエンジンは3つあります。そのエンジンが対応している標準仕様にどれほど違いがあるかを見てみましょう。それを一番分かりやすく見れるのは次のWeb Platform Testのデータとなります。
+
+![[WPT.svg]]
+
+“Browser Specific Failures” – 2021年12月4日のデータより
+
+このグラフはWeb Platform Testを1つのブラウザーだけが対応していないかを見るためのものです。つまり、他のブラウザーが全員すでに対応しているものに対応していないということです。
+
+ここで明らかになることが一つあります。Safariが対応していない仕様の数はFirefoxやChromeより数倍高いです。具体的にはFirefoxの約2.4倍、そしてChromeの約4.7倍です。
+
+さらに、SafariはiOSと密接な関係を持っていることを考慮するべきです。主にこの2つの点です：
+
+3. SafariのリリースはiOSのリリースに依存している：他のモバイルブラウザーはOSとは別にアップデートされますが、SafariはiOSのリリースに依存しています。そして、iOSのアップデートがすでに終了している端末ではSafariだけをアップデートすることはできません。
+4. iOSのブラウザーは全てWebkitベース：iOS版のChromeやFirefoxなどが存在しますが内部的にはSafariと同じエンジンを使っています。これは [Appleのルール上](https://developer.apple.com/app-store/review/guidelines/#software-requirements) iOSにある全てのブラウザーがWebkitを使用しなければなりません。
+
+このiOSとSafariの関係性があるので、iOSのメジャーバージョンがリリースされる際にiOSのバージョンのシェア率がどう変動するか見る必要があります。
+
+![[iOS-Share.png]]
+
+Graph derivative of [“Mobile & Tablet iOS Version Market Share Worldwide”](https://gs.statcounter.com/ios-version-market-share/mobile-tablet/worldwide/#quarterly-201901-202104) by Statcounter used under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). This graph is licensed under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) by Alan Dávalos.
+
+iOSの変動の傾向を分かりやすく説明するために、上記のグラフでのiOSバージョン12系のシェア率の動きを見てみましょう：
+
+- 2019年にQ1からQ3までは徐々に伸びますが、Q3の終わりにiPhone 11とiOS 13が出る途端、その数字が一気に減ります。
+- そこからさらに、一年をかけて20%未満にまで下がります。
+- そして、2020年Q3にiPhone 12とiOS 14が出ますと、その数字がまた一気に減少し2021年Q2にはシェア率はほぼないものとなります。
+- 12系にあった傾向は13系と14系にも見られます。
+
+よって、iOSのシェア率の90%以上は常に2年以内にリリースした最新の3つのメジャーバージョンとなっています。すなわちSafariのバージョンも2年以内にリリースされたものに対応する必要があります。
+
+### **モバイルネットワークについて**
+
+今までは散々端末やブラウザーについて話しましたが、WebのUX影響する開発者としてどうしようもできない要素はもう1つあります。それはネットワークへの接続。Wi-Fiに接続している時はこれはある程度安定していますが、モバイルネットワークではそうは行きません。このモバイルネットワークは今どうなっているかを見てみたいと思います。
+
+### **3Gと4Gについて**
+
+Lighthouseなどのラボ系パフォーマンスツールではいつもネットワークは3Gになっていると思いますが、実際のユーザーの状況はすでに大きく変わっています。 [Opensignalの2020年5月のレポート](https://www.opensignal.com/sites/opensignal-com/files/data/reports/pdf-only/data-2020-05/state_of_mobile_experience_may_2020_opensignal_3_0.pdf)によりますと、世界の平均的な4Gの使用率(4Gネットワークに接続していた時間の割合)は86.8%です。つまり、グローバルで見てもほとんどのユーザーが少なくとも4Gのネットワークに接続できます。そして、その中でも日本の4Gの使用率は世界最大の98.5%となっています。
+
+### **5Gについて**
+
+しかし、その反面5Gはまだこれからです。 [Opensignalの2021年11月のレポート](https://www.opensignal.com/2021/11/30/benchmarking-the-global-5g-experience-november-2021)によりますと、世界最大の5Gの使用率の韓国はまだ29.1%しかありません。
+
+### **新しいベースラインとは**
+
+上記全てのデータを元に新しいベースラインを作り出すと：
+
+5. 標準仕様に関しては **Safari** はベースライン：自分たちが開発するサイトは少なくとも2年前のSafariで動作できないといけません。
+6. パフォーマンスに関しては**低スペックのAndroid端末**がベースライン：低スペックのAndroid端末は近年あまり進歩していないので、パフォーマンスを強く意識する必要があります。
+7. ネットワークに関しては**4G**がベースライン：日本だけでなくグローバルでもネットワークの速度と安定性が増してきています。
+
+## ベースラインに対してどこまで応えられているか？
+
+ベースラインとなる3つの要素を定義できましたが、それだけでは足りません。現在どこまでそれに応えられているかを見る必要があります。ただし、具体的な分析はそれぞれのプロジェクトでは違います。ここで弊社の1つのプロジェクトの話をしても、それが役に立つプロジェクトは限られて来ます。
+
+なので、大胆に行ってWeb全体を分析します。幸い、これをするに当たってうってつけの情報源があります、それは [Web Almanac 2021](https://almanac.httparchive.org/ja/2021/)。これはHTTP Archiveが毎年出すレポートです。8,200,000以上のサイトのデータを元に様々な観点から24章を作り上げていきます。今回はこの24章の一部のデータを元に、Web全体が上記にベースラインに応えられているかを確認します。
+
+### **2021年のサイトサイズの中央値**
+
+2021年のサイトサイズの中央値は全体で1,923kBほどです。それをファイルのタイプごとに分けてみますと、画像とJavaScript(以下 JS)がそのほとんどだと見られます。
+
+![[Median-Website.svg]]
+
+“Page Weight” – Web Almanac 2021 より
+
+このデータを見て一番重い部分の画像に目が行きがちですが、一番注意すべき点はJSのサイズです。これの主な理由は、画像はJSより処理が簡単ということです。画像はダウンロードしてほぼそのまま表示できますが、JSはダウンロードしてから解析して実行する必要もあります。なので、処理にかかるリソースは画像より多いです。
+
+さらに、上記に取り上げた[Alex Russellさんの記事](https://infrequently.org/2021/03/the-performance-inequality-gap/)の低スペックのAndroid端末と4Gのネットワークを想定した分析では、高パフォーマンスを持つためには100kBのHTMLとCSSと350kBのJSが限界という結論が出ています。つまり、現在の中央値サイトはHTMLとCSSの面ではパフォーマンスは良さそうに見えますが、JSの面では限界を大きく超えています。
+
+### **HTMLとCSSの利用について**
+
+Web Almanacの中には[マークアップ](https://almanac.httparchive.org/ja/2021/markup)と [CSS](https://almanac.httparchive.org/ja/2021/css) についての章がありますが、その中で取り上げている情報がたくさんあります。その中からいくつかのキーポイントを見るだけでも、今どういう風にHTMLとCSSを利用しているか分かります。
+
+### **HTML**
+
+まずはHTMLについてですが、現在deprecatedになっていない [HTMLのタグは112 ](https://html.spec.whatwg.org/multipage/indices.html#elements-3)があります。その中から使われている要素の数の中央値は31です。HTMLのタグを全て使う必要はもちろんありませんが、この31のタグの中に `<html>` や `<body>` や `<script>`などといったタグが含まれています。なので、実際にコンテンツを見せるために使っているタグの種類はそこまで多くないです。
+
+そのタグの中では、一番よく使わられることのあるタグのリストには `<div>`が1位、`<span>`が3位、そして `<p>`が7位という結果になりました。しかも、`<div>`をとあるサイトが使っている確率も98.9%ということで、コンテンツを表示するためには一番使っているタグと言えます。
+
+それに反して、`<main>`タグが使われている確率は27.9%止まりです。 `<main>`の存在はなぜ大事かと言いますと、`<main>`は`<aside>`や`<header>`などとともに特別な表示などはないがセマンティックな意味を持つタグの1つだからです。つまり、`<main>`タグの利用確率を見ることで、セマンティックな要素を積極的に使っているページの数をある程度確認することができます。なので、この27.9%という数字はより重いものとなります。
+
+### **CSS**
+
+CSSに関してはたった1つの数字で今のCSSの使い方をまとめられます。それはモダンなレイアウト方法であるFlexとGridの採用率です。
+
+![[CSS.svg]]
+
+[“CSS” – Web Almanac 2021](https://almanac.httparchive.org/ja/2021/css#%E3%83%95%E3%83%AC%E3%83%83%E3%82%AF%E3%82%B9%E3%83%9C%E3%83%83%E3%82%AF%E3%82%B9%E3%81%A8%E3%82%B0%E3%83%AA%E3%83%83%E3%83%89%E3%81%AE%E6%8E%A1%E7%94%A8) より
+
+見ての通り、Flexは71%のページに使われているのに比べてGridはたったの8%のページにしか使われていません。この差の理由はおそらくIEのサポートにあります。 [IEでは古いGridの仕様にしか対応していない](https://caniuse.com/css-grid)ので、IEのサポートが必要なページで使う際にはそれを考慮しなければなりません。CSSの機能はJSの機能に比べてPolyfillが作りにくいなどということもあって、おそらくGridの利用を諦めている開発者が多いです。しかし、IEのサポートを切れる今では、Gridをはじめ多くのモダンなCSS機能が使えるようになりました。
+
+### **パフォーマンスについて**
+
+ページのパフォーマンスを計算するために最近一番よく使われる方法は [Core Web Vitals](https://web.dev/i18n/ja/vitals/) (以下 CWV)です。理由は様々ありますが、[Google検索での表示順番の判断材料](https://developers.google.com/search/blog/2020/11/timing-for-page-experience)として使われていることは大きいと思います。このCWVから見て、今のWebのパフォーマンスはどれぐらいなのか見てみましょう。
+
+![[CWV-Ranking.svg]]
+
+“Performance” – Web Almanac 2021 より
+
+全体的に言えばパフォーマンスはあまり良くない印象です。全体のページの半数以上がCWVでいい結果を出せていません。モバイル向けのサイトではいい結果を出せているページがパソコン向けより12%以下になっているのも、パソコンとスマホのCPUの違いを考えれば妥当でしょう。そして、この結果自体も上記に話したJSのサイズがパフォーマンスの限界を超えていることとも一致しています。
+
+パフォーマンスの影響がユーザー数にも直接影響することも、次のグラフから見ることができます。
+
+![[CWV.svg]]
+
+“Performance” – Web Almanac 2021 より
+
+CWVはGoogle検索の判断材料になっているということもあって、パフォーマンスの良さとView数には関連性が見受けられます。View数でのトップ1,000のサイトのCWVのスコアは37%に足しているのに比べて、全体のスコアは32%です。そして、トップ10,000や100,000などを見ても、上にいればいるほどいいパフォーマンスを有しているページが固まっています。パフォーマンスをより意識することでプロジェクトの利益に直接影響できる要素の一つと言えるでしょう。
+
+### **JSのライブラリーとフレームワークについて**
+
+JSファイルのサイズが大きいせいでページのパフォーマンスに影響していることが十分に確認できたと思います。JSを多めに使うプロジェクトはなんらかの形でライブラリーかフレームワークを使用することが多いので、その選択の違いがもたらす影響をメインに分析します。
+
+![[Framework-Cost-Size.png]]
+
+[“The Cost of Javascript Frameworks” – Tim Kadlec](https://timkadlec.com/remembers/2020-04-21-the-cost-of-javascript-frameworks) より
+
+![[Framework-Cost-CPU.png]]
+
+[“The Cost of Javascript Frameworks” – Tim Kadlec](https://timkadlec.com/remembers/2020-04-21-the-cost-of-javascript-frameworks) より
+
+![[SSG-JS-Size.svg]]
+
+“Jamstack” – Web Almanac 2021 より
+
+![[SSG-CWV.svg]]
+
+“Jamstack” – Web Almanac 2021 より
+
+![[Lab-Benchmark-2.png]]
+
+[“Results for js web frameworks benchmark – official run”](https://krausest.github.io/js-framework-benchmark/2021/table_chrome_96.0.4664.45.html) より
+
+![[Lab-Bundle.svg]]
+
+“All the Ways to Make a Web Component – Nov 2021 Update” – WebComponents.dev Blog より

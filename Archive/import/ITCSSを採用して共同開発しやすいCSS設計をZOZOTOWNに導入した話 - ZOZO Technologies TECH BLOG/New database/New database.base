@@ -1,0 +1,22 @@
+# New database
+
+filters:
+  and:
+    - note["base"] == link("New database.base")
+properties:
+  "1":
+    displayName: "1"
+  file.name:
+    displayName: 〃
+  Settings:
+    displayName: Settings
+  CSSプリプロセッサなどで利用する変数や設定:
+    displayName: CSSプリプロセッサなどで利用する変数や設定
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - "1"
+      - Settings
+      - CSSプリプロセッサなどで利用する変数や設定

@@ -1,0 +1,475 @@
+---
+Created: 2021-01-15T20:25:00
+URL: https://panda-program.com/posts/bengo4com-library-frontend
+Tags: [topic/技術/React, topic/技術/ソフトウェア設計]
+---
+## 弁護士ドットコムライブラリーのフロントエンドのアーキテクチャを紹介します
+
+この記事は[弁護士ドットコム Advent Calendar 2020](https://qiita.com/advent-calendar/2020/bengo4com)、2日目の記事です。
+
+私は[弁護士ドットコムライブラリー](https://library.bengo4.com/)というサービスを開発しています。これは法律書籍をネットで読めるの弁護士向けのサブスクリプションサービスです。
+
+![](https://panda-program.com/static/1b8ccf59ee344f13bcb77e43240ca311/d9199/2020_12_02__1.png)
+
+フロントエンドの採用技術はNext.js + TypeScriptで、要件定義から設計、実装は私が担当し、現在も運用しています。
+
+この記事では、2020年5月にリリースしてから半年間、Next.jsで上記サービスを運用した知見の中から、フロントエンドでのアーキテクチャについてご紹介します。
+
+弁護士ドットコムライブラリーの特徴は以下の通りです。
+
+- 画面数は10画面ほどの中規模アプリケーション（OOUIの考え方を取り入れたら画面数が減りました）
+- 基本的にバックエンドから渡されるデータを整形・表示するRead要件がメイン
+- バックエンドは認証、書籍検索（Elastic Search）、課金（Stripe）のマイクロサービス
+- ECS上でNodeコンテナとして運用しているため、VercelやNetlifyは利用していない
+- CSSについては、デザイナーさんがHTML+CSSを記述してくれるのでCSS Moduleを利用。Atomic Designは採用していない
+
+なお、Storeの構成については、Read要件がメインのサービスでありシンプルなため、この記事では特に触れません。
+
+サービスの利用については、現在、弁護士ドットコムに登録している弁護士の方、または弁護士事務所の事務所単位で利用する方のみ登録可能です。ただ、書籍の検索は誰でも可能なので、動かしてみたい方は[トップページ](https://library.bengo4.com/)から検索ワードを入力してみてください。
+
+技術スタックは以下の通りです。
+
+- `フレームワーク: Next.js（React） + TypeScript
+- 状態管理: useContext（Reduxを導入する予定）
+- データフェッチ: Next.js組み込みのfetch、 SWR
+- CSS: CSS Modules（SCSS）
+- テストフレームワーク: Jest、 @testing-library/react-hooks
+- CDN: Akamai
+- CI: GitLab CI
+- インフラ: ECS、ECR、RDS（MySQL）
+- 監視: Datadog
+- その他: ESLint・Stylelint・Storybook、Renovate、Docker Compose、Stripe`
+
+普段はDiscordを使いながら、ペアプログラミングで開発しています。
+
+### レイヤードアーキテクチャを採用
+
+結論から記述すると、フロントエンドでレイヤードアーキテクチャを採用しました。
+
+![](https://panda-program.com/static/9fead0a3397505b06f9d169322fa1593/d9199/2020_12_02__2.png)
+
+（図はマーティン・ファウラーのブログ記事「PresentationDomainDataLayering」より）
+
+[「PresentationDomainDataLayering」](https://martinfowler.com/bliki/PresentationDomainDataLayering.html)と[ボブおじさんのクリーンアーキテクチャ](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)を参考にレイヤードアーキテクチャを採用し、各レイヤーがクリーンになるように設計しています。
+
+昨今、フロントエンドでクリーンアーキテクチャを適用する試みが見られます。しかし、そもそもクリーンアーキテクチャはWebを外部のI/Oであると定義しており、デスクトップやCLIでも動作する、MVC2ではないアプリケーションを想定しています。
+
+このため、弁護士ドットコムライブラリーはWebアプリケーションであるため、クリーンアーキテクチャを適用しましたとは言わないものの、クリーンアーキテクチャのエッセンスを抽出した「クリーンなアーキテクチャ」を目指して設計しました。
+
+このアーキテクチャの特徴は、以下のようなものです。
+
+- レイヤーごとの責務が明確であること
+- モジュールの依存の方向が制御できていること
+- モジュールがテスタブルであること（本記事執筆時点で、Unit Testのテストカバレッジは85%です）
+- 外部のものはアダプターとして使い、アプリケーション内に依存をばら撒かないこと
+
+これらの特徴を備えたアプリケーションは、メンテナンス性に優れており、仕様の追加や変更に強く、コードの処理が追いやすくなります。
+
+### ディレクトリ構成
+
+上記の特徴を実現するために、ディレクトリ構成は次のようにしています。
+
+`app
+├── pages                    # next.jsのページコンポーネント。各tsxのファイル名がURLのpathに対応している。
+├── public                   # 静的ファイルを置く場所。faviconとか、サイトのロゴなど
+│   └── images               # サイト内で使用する画像
+└──src
+    ├── assets              # pages、componentsで利用する共通のSCSS
+    ├── components          # ReactのFunction Component、コンポーネント単位のSCSS
+    ├── hooks               # コンポーネント間で共通のReact Hooks
+    ├── interactors         # Network層。HTTPを介して外部と通信するクラスを置いている
+    ├── lib                 # Adapter層。moment.jsやGoogle Analyticsのライブラリなどを呼び出している
+    └── type                # アプリケーション内で共通の型を置いている
+        ├── API             # RESTful APIのエンドポイントから返却されるJSONの型
+        └── domain          # アプリケーション内で利用する型`
+
+Next.jsを採用しているため、ルートディレクトリにあるpagesディレクトリのファイルがルーティングに対応しています。ファイルシステムに基づいたルーティングは、素のHTMLをサーバーで配信するのと同じですね。
+
+components内には、React Componentを記述しています。この中は、export用のindex.ts、FooコンポーネントのFooComponent.tsx、コンポーネント内で利用するSCSS（style.modules.scss）、Storybook用のコンポーネント（index.stories.tsx）、プレゼンテーションロジックを記述するpresenter.ts（[後述](https://panda-program.com/posts/bengo4com-library-frontend#presenter%E3%81%AE%E5%BD%B9%E5%89%B2)）を配置しています。
+
+また、interactorsというディレクトリはあまり見かけないと思います。この役割はfetcherとmapperです。つまり、APIのレスポンスデータであるJSONをJavaScriptのオブジェクトに変換し、TypeScriptでドメインの型にマッピングするための処理を記述しています。このレイヤーにより、APIの変更による影響を最小限に抑えることができます。こちらは[次の章](https://panda-program.com/posts/bengo4com-library-frontend#interactor%E3%81%A8mapper%EF%BC%88%E3%83%87%E3%83%BC%E3%82%BF%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E5%B1%A4%EF%BC%89)で説明します。
+
+なお、ユーザーのリクエストからレスポンスまで、データフローは以下のような流れです。
+
+![](https://panda-program.com/static/df37daf2aa6e54f805c6a0fb0b2ad8f8/18872/2020_12_02__3.png)
+
+## InteractorとMapper（データアクセス層）
+
+### Interactorの役割
+
+Interactorはバックエンドからデータを取得するレイヤーです。`interactors`ディレクトリの中身は以下の通りです。
+
+`interactors
+├── BaseInteractor.ts   # fetchをラップした、get, post, put, deleteメソッドを備えたクラス。
+├── Books               # 書籍データを持つElastic Searchサーバーへのリクエストを担当
+│   ├── Book
+│   │   ├── BookInteractor.ts
+│   │   └── BookMapper.ts
+│   └── Search
+│       ├── SearchInteractor.ts
+│       └── SearchMapper.ts
+├── Payment             # Stripeサーバー（決済）へのリクエストを担当
+│   ├── Card
+│   │   └── CardInteractor.ts
+│   ├── Customer
+│   │   └── CustomerInteractor.ts
+│   └── Subscription
+│       ├── SubscriptionInteractor.ts
+│       └── SubscriptionMapper.ts
+└── Session             # Sessionサーバー（ユーザー認証情報）へのリクエストを担当
+    ├── SessionInteractor.ts
+    └── SessionMapper.ts`
+
+Book、Payment、Sessionの3種類のInteractorは、それぞれ書籍の検索、課金、ログインセッションサーバーの各エンドポイントに対応しています。
+
+この３種類のInteractorクラスにBaseInteractorを注入し、HTTPメソッドに応じた通信をするようにしています。
+
+例えば、書籍サーバーからIDに応じて書籍データを取得するコードを掲載します。
+
+BookInteractor.tsx
+
+`export default class BookInteractor {
+  
+  private readonly interactor: ClientInterface
+
+  constructor() {
+    
+    this.interactor = BaseInteractor.createBookInteractor()
+  }
+
+  findById = async (id?: string): Promise<Book | null> => {
+    if (typeof id === 'undefined') {
+      return null
+    }
+
+    
+    const res = await this.interactor.get(`${BOOK_BIBLIOGRAPHIES_PATH}/${id}`)
+    try {
+      const body: BookBody = await res.json()
+      
+      return BookMapper.bibliographyBodyToBook(body)
+    } catch (e) {
+      
+      
+      return null
+    }
+  }
+}`
+
+エンドポイントごとにInteractor（fetcher）を用意しているため、エンドポイントが増えればInteractorを追加すれば仕様追加に対する変更が完了します（Open Closed Principle）。
+
+或いは、「書籍を全件取得する」という仕様が追加された場合、`BookInteractor`に`findAll`メソッドを記述するだけでOKです（Single Responsibility Principle）。
+
+なお、クエリストリングが必要な場合、`interactor.get`の第二引数に渡します。
+
+### Mapperの役割と特徴
+
+Mapperの役割は、バックエンドが返却する値にフロントのアプリケーションを依存させないことです。Mapperの特徴は、Interactorのメソッドと1対1対応していることです。
+
+その内容は、エンドポイントから返されるJSONをドメインの型にマッピングするためのクラスです。
+
+BookMapper.tsx
+
+`export default class BookMapper {
+  
+  static bibliographyBodyToBook = (result: BookBody): Book => ({
+    id: result.content_id,
+    title: result.title.main,
+    subTitle: result.title.sub,
+    authors: result.authors || [],
+    publisher: result.publisher,
+    publishedAt: result.release_date,
+    tableOfContents: result.toc,
+    thumbnailUrl: result.thumbnail_url,
+    abstract: result.abstract,
+    url: result.url,
+  })
+}`
+
+Mapperというレイヤーを設けておくことで、バックエンドから返却される値が変わった場合出会っても、このMapperを変更するだけで済みます。このため、アプリケーション内部の変更の影響を最小限に留められます。
+
+なお、返却されるJSONがとてもシンプルな場合は、Mapperを書かずにInteractorの中でドメインの型にマッピングすることもあります。
+
+InteractorをReactで利用する際は、useEffect内でInteractorを呼び出すことでレスポンスデータを扱います。
+
+`type Props = { id?: string }
+
+const Book: React.FC<Props> = (props) => {
+  const [book, setBook] = useState<BookType | null>({})
+
+  useEffect(() => {
+    async(() => {
+      setBook(await new BookInteractor().findById(props.id))
+    })()
+  }, [props.id])
+
+  if (book === null) {
+    return <Error message={"書籍取得に失敗しました"} />}
+
+  return <h1>title: {book.title}</div>
+}`
+
+このInteractorはSWRでも活用できます。
+
+`type Props = { id?: string }
+
+const Book: React.FC<Props> = (props) => {
+  const { data: book, error } = useSWR<Book>(
+    `${BOOK_BIBLIOGRAPHIES_PATH}/${props.id}`,
+     () => new BookInteractor().findById(props.id)
+   )
+
+  if (!book) {
+    return <Loading />}
+
+  if (error) {
+    return <Error message={"書籍取得に失敗しました"} />}
+
+  return <h1>title: {book.title}</div>
+}`
+
+## ReactコンポーネントとPresenter層（プレゼンテーション層）
+
+弁護士ドットコムライブラリーはバックエンドからのデータ表示がメインのアプリケーションであるため、Interactorから渡された値を表示するためのロジックを格納するPresenter層を用意します。バックエンドに例えるとMVVMのViewModel層に相当します。
+
+Presenter層を紹介する前に、まずはクリーンなReactコンポーネントの書き方をご紹介します。
+
+### クリーンなReactコンポーネントの書き方
+
+Greetingコンポーネントを例にReactコンポーネントの書き方を紹介します。すると、`src/components/greeting`は下記のような構成になります。
+
+`src/components/greeting
+├── __tests__
+│    ├─ useGreeting.test.ts
+│    └─ presenter.test.ts
+├── index.ts
+├── index.stories.ts
+├── Greeting.tsx
+├── presenter.ts
+├── useGreeting.ts
+└── style.module.css`
+
+今回は、hooksと、そのテストの記述は省略します。なお、ドラッグ&ドロップなどの複雑なUIの操作は存在しないため、`@testing-library/react`によるコンポーネントテストは導入していません。
+
+CypressによるE2Eテストは導入したいと思っていますが、現在は`Jest`と`@testing-library/react-hooks`によるUnit Testのみ記述しています（Unit Testのコードカバレッジは85%）。
+
+また、Reactコンポーネントの書き方は、[@takepepe](https://twitter.com/takepepe)さんの[「経年劣化に耐える ReactComponent の書き方」](https://qiita.com/Takepepe/items/41e3e7a2f612d7eb094a)を参考にしています。
+
+この記事の意義は、Vue.jsのSFC（Single File Component）の書き方をReactに導入したことです。これにより、View（JSX）をComponentに、データ表示用のロジックをContainerに記述し、責務を分離できます。詳しい説明は記事をご覧ください。
+
+Greeting.tsx
+
+`import React, { memo } from 'react'
+import css from './style.module.scss'
+
+type ContainerProps = {
+  target?: string
+}
+
+type Props = Required<ContainerProps>
+
+// デザイナーさんはComponentのJSXを記述すれば良い
+// StorybookではComponentのみをimportする
+export const Component: React.FC<Props> = (props) => (
+  <h1 className={css['greeting']}>
+    Welcome to, <span className={css['greeting__target']}>{props.target}</span>
+  </h1>
+)
+
+// フロントエンドエンジニアが書く
+// propsをComponentで表示するデータ形式に書き換える
+const Container: React.FC<ContainerProps> = (props) => {
+  const target = props.target || 'world'
+
+  return <Component target={target} />}
+
+// memo化はComponent、ContainerのどちらでもOK
+export default memo(Container)`
+
+コンポーネントのmemo化については、ContainerでもComponentでもどちらでも適切な方をReact.memoでラップしましょう。
+
+また、Storybookのコンポーネントは以下のように記述しています。
+
+Storybookのコンポーネントはプレゼンテーションであるため、importするのはComponentです。
+
+Containerに記述するlocal stateやデータの変換処理は不要です。Storybook上でコンポーネントのstateを操作せずとも、Container（ViewModel）の処理の結果としてComponentに渡されるデータを複数用意すれば十分です。
+
+以下は、Storybook v6 + TypeScriptの記述方法です。
+
+index.stories.tsx
+
+`import { Meta, Story } from '@storybook/react'
+import { Component as Greeting, Props } from './Greeting'
+
+export default {
+  title: 'components/Greeting',
+  component: Greeting,
+  argTypes: {
+    target: { control: 'text' },
+  },
+} as Meta<Props>
+
+const Template: Story<Props> = ({ ...args }) => <Greeting {...args} />
+
+export const World = Template.bind({})
+World.args = {
+  target: 'World'
+}
+
+export const Next = Template.bind({})
+Next.args = {
+  target: 'Next.js'
+}`
+
+### Presenterの役割
+
+さて、Presenterについて紹介します。`presenter.ts`は、Container内でのロジックをテスト可能にするための関数を記述するファイルであり、コンポーネントと1対1に対応するロジックを記述します。
+
+「コンポーネントに閉じるロジックなら、Containerに直接関数を書いてもいいのでは？」という意見もありました。しかし、クリーンなアーキテクチャを設計する観点からロジックをコンポーネントから切り出しています。理由は以下の通りです。
+
+- `Container内のロジックをテスト可能にするため
+- コンポーネント内にはPresentational Componentとロジックを記述するContainerしか配置しないため - ファイルの見通しが悪くなるため、functionや子コンポーネントは、例え小さいものでも同一ファイルに記述しない
+- Reactコンポーネントのファイルは1ファイル100行以下にしておきたいため`
+
+ただし、全ての処理を`presenter.ts`に記述するわけではありません。三項演算子やStringをNumberに変換する処理など、テストをせずともバグの原因になる不安のないものは、Container内に直接記述しています。
+
+実際のPresenterは以下のように記述しています。
+
+下記は、ヘッダーに配置している検索欄の表示/非表示をページごとに切り替えるロジックです。なお、各ページのパスは定数に切り出しています。
+
+presenter.ts
+
+`const canShowSearchInput = (
+    pathname: string,
+    keyword: string | undefined,
+    hitCount: number | null
+): boolean => {
+  switch (pathname) {
+    case SITE_SEARCH_PATH:
+      
+      if (hitCount === 0) {
+        return false
+      }
+      
+      return !!keyword
+    case SITE_BOOKS_ID_PATH:
+      
+      return true
+    default:
+      return false
+  }
+}
+
+export default canShowSearchInput`
+
+このようなロジックは要件が複雑になると記述量が増えるためContainerコンポーネントの中に書きたくありません。また、stateを使ったロジックでもないので、あえてコンポーネント内に書く必要もありません。
+
+![](https://panda-program.com/static/ced9f4acfc928d654771346c9fd92ef3/d9199/2020_12_02__4.png)
+
+![](https://panda-program.com/static/7f0f00e1ac73d35cb0c7409e049aec6d/d9199/2020_12_02__5.png)
+
+（検索欄はトップページでは非表示ですが、検索ページでは表示しています）
+
+検索欄の表示、非表示なのでComponent（View）はbooleanさえ渡してもらえればよく、`presenter.ts`に切り出すのが適切なパターンといえるでしょう。あとはContainerで処理を呼び出すだけです。
+
+Header.tsx
+
+`import Logo from '~/src/components/logo'
+import Presenter from './presenter'
+
+type ContainerProps = {
+  pathname: string
+  keyword?: string
+  hitCount: number | null
+}
+
+type Props = {
+  canShowSearchInput: boolean
+}
+
+export const Component: React.FC<Props> = (props) => (
+  <nav>
+    <Logo />
+    {props.canShowSearchInput && <SearchInput />}
+  </nav>
+)
+
+const Container: React.FC<ContainerProps> = (props) => {
+  const canShowSearchInput = Presenter.canShowSearchInput(
+    props.pathname,
+    props.keyword,
+    props.hitCount,
+  )
+
+  return <Component canShowSearchInput={canShowSearchInput} />}`
+
+（Headerコンポーネントは説明のため簡略化しています）
+
+Presenterのテストを記述することにより、ユーザーに意図しない形でデータやコンポーネントが表示されているかもしれないという不安がなくなります。
+
+## 型の依存の方向を制御する（Types）
+
+一般的に、モジュールの依存の方向を整理しなければアプリケーションが複雑になります。TypeScriptでの型定義も同様です。このため、型ファイルを`src/types`に全て配置するようにしました。
+
+このディレクトリ内の型ファイル自体は外部の何にも依存していないため、`src/components`や`pages`配下でのみ使います。これにより、Reactコンポーネント内で使う型の依存方向を一方向にでき、依存の方向を制御できます。
+
+ただ、特定のコンポーネントツリーでしか使わない型について、最近は`src/components`の各コンポーネントで`types.ts`ファイルを作り、そこに書くようにしています。この型ファイルは他のコンポーネントツリーでは使用しません。2箇所以上で同じ型を使う場合、globalなものとみなして`src/types`配下に切り出します。
+
+また、初期では避けていましたが、今では子コンポーネントのPropsをexportして親コンポーネントで利用することもあります。こちらも、「同一コンポーネントツリー内のみで、子から親へのみimport可能」というルールを設けています。
+
+## マーティン・ファウラーのPresentationDomainDataLayeringとの対応
+
+最後に、冒頭で紹介したファウラー氏のPresentation、Service, Domain Objects、Data Mapper、Data Accessと各レイヤーの対応をチェックします。
+
+![](https://panda-program.com/static/9fead0a3397505b06f9d169322fa1593/d9199/2020_12_02__2.png)
+
+### Presentation
+
+PresentationはReact ComponentのContainerのロジックとPresenterに対応します。
+
+### Service, Domain Objects
+
+この層に対応するレイヤーはありません。APIからjsonで取得したデータを表示させるだけであるので、Entitiy同士が相互作用する場面や、Storeから取り出した値を組み合わせて使う場面がないためです。
+
+### Data Mapper
+
+APIから取得したJSONをアプリケーション内で使う型に変換する層であるため、InteractorのディレクトリにあるMapperに対応します。なお、Interactorの各メソッドとMapperは1対1で対応している。
+
+### Data Access
+
+Data AccessはInteactorに対応しています。Inteactorという名前は同僚の[@tenjuu99](https://twitter.com/tenjuu99)さんが開発している[業務システム](https://www.bengo4.com/lawyer/gyosys/)のコードを参考にしました。なお、業務システムはNuxt.js + BEAR.Sunday（PHP）で構築されています。
+
+また、バックエンドのAPIはデータベースではありません。このため、Data Access層との対応は疑似的なものです。
+
+## 半年間運用してみた所感
+
+半年間運用してみた結果、感触はとても良いと思いました。
+
+- Presenter（Container）とComponentを分けるのは、思考がシンプルになる
+- 各レイヤーの責務が明確なので、仕様の追加・変更があっても、コードを読む箇所、書き換える箇所が狭い
+- 処理を追加する際、何をどこに書くか悩まない
+- デザイナーさんとの協業が楽（「CSSをいじるときにComponentだけ見ればいいのでわかりやすい」とのデザイナーさん評）
+
+総じて、Next.js自体がディレクトリ構成までは指定しないフレームワークなので違和感はないです。また、新しいメンバーがジョインしても、MVCで開発した経験があれば容易に理解できると思います。
+
+アーキテクチャを考え、テストを書き、慎重にデプロイした結果、半年間の本番で小さいバグは数個あったものの、中・大規模な障害は1度も発生せず、デプロイの切り戻しは一度もありませんでした。このため、安心して開発できます。
+
+### これからリファクタリングをしていきたいこと
+
+以下では、これからのリファクタリング案を記載しています。現行のアプリケーションで特に問題にはなっておらず、またイテレーションの中で消化するタスクとして切り出してはいませんが、更なる品質向上のために必要だと思うことを書き出しています。
+
+- 初期はsrc/componentsにコンポーネントの粒度を気にせず置いていたので、下記のようにコンポーネントを整理する
+- pages/sharedで分ける
+- pagesはそのページでしか使わないコンポーネント
+- sharedは2箇所以上で使う共通コンポーネント
+- useContext/useReducerで行っているglobalな状態管理をRedux + reselect + immerに置き換える
+- Next.jsのpagesはNext.jsとstoreとの接続層とする。Next Routerもこの層でしか使わないようにする
+- Next.jsへの依存を限定するため
+
+これらは、時間を見つけて対応していきたいです。
+
+設計段階の狙いはかなりの部分で達成していますが、まだまだやりたいことはたくさんあります。質問などがあれば[twitter](https://twitter.com/Panda_Program)までぜひよろしくお願いします。
+
+最後に、フロントエンドのアプリケーションを構築した経験から、結局アーキテクチャや採用技術はアプリケーションの性質・仕様・要件次第だと考えています。本記事は、write要件の少ない中規模のアプリケーションのアーキテクチャ例として一読いただければ幸いです。本記事での考え方はReactのアプリケーションに留まらず、どこか別のところでも応用できると考えています。
+
+明日、アドベントカレンダー3日目は弁護士ドットコム本部・開発部のTech Lead [@kano](https://qiita.com/hkano) さんの「Polyfill.io を使って JavaScript の Polyfill を適用する」です！

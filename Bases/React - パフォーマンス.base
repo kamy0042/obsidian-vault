@@ -1,0 +1,26 @@
+filters:
+  and:
+    - or:
+        - file.hasTag("topic/技術/React")
+        - file.hasTag("topic/技術/React/Nextjs")
+    - file.hasTag("topic/技術/パフォーマンス")
+properties:
+  file.name:
+    displayName: Name
+  Updated:
+    displayName: Updated
+  URL:
+    displayName: URL
+  Tags:
+    displayName: Tags
+  Created:
+    displayName: Created
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - Updated
+      - URL
+      - Tags
+      - Created

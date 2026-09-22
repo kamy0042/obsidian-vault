@@ -1,0 +1,25 @@
+# React - ソフトウェア設計
+
+filters:
+  and:
+    - or:
+        - file.hasTag("topic/技術/React")
+        - file.hasTag("topic/技術/React/Nextjs")
+    - file.hasTag("topic/技術/ソフトウェア設計")
+properties:
+  file.name:
+    displayName: Name
+  Created:
+    displayName: Created
+  Tags:
+    displayName: Tags
+  URL:
+    displayName: URL
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - Created
+      - Tags
+      - URL

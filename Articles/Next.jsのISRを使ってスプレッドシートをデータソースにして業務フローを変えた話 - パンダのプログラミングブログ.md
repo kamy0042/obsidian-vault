@@ -1,0 +1,407 @@
+---
+URL: https://panda-program.com/posts/nextjs-isr-spreadsheet
+Created: 2021-01-15T18:13:00
+Updated: 2021-01-15T18:22:00
+Tags: [topic/技術/React/Nextjs]
+---
+## Next.jsのISRを使って業務フローを変えた話
+
+この記事は [Next.js アドベントカレンダー 2020](https://qiita.com/advent-calendar/2020/nextjs) の最終日の記事です。
+
+本記事では、Next.js の ISR の機能を使って業務フローを変えた話を紹介します。[Incremental Static Regeneration](https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration)（以下、ISR） とは、Next.jsアプリケーションをビルドしてデプロイした後も、特定のページのみ定期的に再ビルドする機能です。
+
+ISRでのリクエスト先は Google Apps Script（以下、GAS）にしました。GAS でスプレッドシートのデータを返却する API を作成したので、コードも併せて紹介します。
+
+## 作ったものは書籍の一覧更新を自動化するもの
+
+### 開発しているサービス「弁護士ドットコムライブラリー」を紹介します
+
+私は仕事で [弁護士ドットコムライブラリー](https://library.bengo4.com/)というサイトを開発しています。このサイトは弁護士の方向けの法律書籍読み放題サービスで、フロントはNext.js、サーバーはPHPで記述しています。
+
+![](https://panda-program.com/static/526c067cb737c984f933d8186b1cd924/d9199/2020_12_25__1.png)
+
+弁護士ドットコムライブラリーでは、トップページにプロダクトオーナー（以下、PO）が選定した書籍を100冊以上掲載しています。
+
+初期リリース時には、まずハードコードで問題ないという判断をしました。これには2つの理由があります。1つは、書籍のメタ情報を非エンジニアでも変更したいという要件があったためtomlファイルで管理しており、DBにはbookテーブルは存在しないこと。もう1つはトップページの書籍の入れ替え要件が発生していなかったからです。しばらくはこれでうまくいきました。
+
+![](https://panda-program.com/static/8639043f4a0257c1f6b8f25005ae6b67/d9199/2020_12_25__2.png)
+
+### ハードコーディングでは課題がある
+
+リリース後、しばらくサービスを運用していくうちに、各出版社様から新しい書籍や新着雑誌、また有名な書籍の掲載許可を数々頂くことができました。このため、トップページの書籍を定期的に入れ替えたいという要望がチーム内から上がってきました。
+
+最初は、POは選び直した書籍のメタ情報をスプレッドシートに記載し、それを元にエンジニアがハードコードしているデータを定期的に書き変えるという運用フローに収まりました。しばらくの間月1回、月初にその対応をしていました。
+
+ただ、PO としては出版社様から掲載許可を頂いたタイミングでアドホックに書籍一覧を更新したいという要望が出てきました。これはもっともな意見です。
+
+弁護士ドットコムライブラリーは毎月更新のサブスクリプションサービスであるため、ユーザーの契約更新のタイミングまでに新着書籍が入ったことを何度かアピールしたいのです。その場合、月1回のみの更新だと書籍一覧の変更サイクルとしては長すぎ、ユーザーが新着書籍に気づかずに退会してしまうかもしれません。
+
+一方、PO としては、月中に何度も変更するとエンジニアにとって負担になって通常業務に支障が出ないか心配だという話を聞きました。
+
+また、この段階でプロダクトは MVP であり、別の新規機能の追加が必要であることがユーザーインタビューを通じてわかっているため、そちらの機能開発を優先したいというフェーズでした。このため、エンジニアがフル稼働しており、管理画面を作る工数を捻出できなかったというチーム事情もありました。
+
+![](https://panda-program.com/photo.jpg)
+
+解説パンダくん
+
+トップページの書籍更新の頻度を増やしてコンテンツの拡充を周知することで、サブスクリプションの重要な指標である解約率を下げたいという話をチームでしていたので、なんとかしたい気持ちは山々だったんだよ。
+
+### ISRを利用することでプロダクトの課題を解決できる
+
+そのような要望が上がり始めたあたりで、Next.js 9.5 のリリースが発表されました。9.5 で実装された ISR の機能と GAS を組み合わせると、書籍の更新フローを PO だけで完結できると考えました。
+
+これで PO も更新頻度を気にせず、自由なタイミングで書籍一覧を更新できます。あとは staging 用、production 用のスプレッドシートを用意し、GASを記述するだけです。
+
+弁護士ドットコムライブラリーは定額の読み放題サービスであり、コンテンツが増えれば増えるほどユーザーにとってお得になるため、新着書籍のお知らせの更新頻度が多いことはユーザーにとって嬉しいはずです。また、PO は自分で反映を確認できる上にエンジニアのタスクを減らせて、まさに「三方よし」です。
+
+ISR はまさにチームが求めていた機能でした。
+
+![](https://panda-program.com/photo.jpg)
+
+解説パンダくん
+
+ちなみに ISR は [Vercel 以外でも `next start` が実行できるなら使える](https://nextjs.org/blog/next-9-5#stable-incremental-static-regeneration)んだよ。現在、業務では ECS を使っており、Next.js を実行している Node コンテナで ISR の機能を使っているよ。
+
+なお、今回 SSR を使わなかったのは、 GAS が SpreadSheet を呼び出す実行速度が早くないため、トップページのレスポンス速度が遅くなることを懸念したためです。
+
+## ISRでのデータ取得と書籍のReactコンポーネントを紹介します
+
+### スプレッドシートで管理するデータとJSONの形式
+
+スプレッドシートで管理する書籍データは以下のようなものです。
+
+見出し
+GAイベント名
+書籍ID
+書籍タイトル
+著者名
+出版年
+サムネイル画像
+
+
+
+
+民法
+civilLaw
+xxx
+書籍X
+XXXX
+2020年
+XXX.png
+
+
+民法
+civilLaw
+yyy
+書籍Y
+YYYY
+2020年
+YYY.png
+
+
+一般民事
+civilCase
+zzz
+書籍Z
+ZZZZ
+2020年
+ZZZ.jpg
+
+![](https://panda-program.com/static/b4f5a93c5b2ee1f989677c4301ed37be/d9199/2020_12_25__3.png)
+
+これらのデータをトップページで利用します。GASで作成したAPIはスプレッドシートのデータをそのままJSONで返却します。
+
+`[
+  {
+    "heading": "民法",
+    "event_name": "civilLaw",
+    "id": "xxx",
+    "title": "書籍X",
+    "author": "XXXX",
+    "published_at": "2020年",
+    "thumbnail_url": "XXX.png",
+  },
+  {
+    "heading": "民法",
+    "event_name": "civilLaw",
+    "id": "yyy",
+    "title": "書籍Y",
+    "author": "YYYY",
+    "published_at": "2020年",
+    "thumbnail_url": "YYY.png",
+  },
+  {
+    "heading": "一般民事",
+    "event_name": "civilCase",
+    "id": "zzz",
+    "title": "書籍Z",
+    "author": "ZZZZ",
+    "published_at": "2020年",
+    "thumbnail_url": "ZZZ.jpg",
+  },
+  
+]`
+
+### トップページでISRを利用して5分ごとにGASのAPIをコールする
+
+ISR の機能を使うため、`getStaticProps`で GAS のエンドポイントにリクエストを送り、返ってきた上記のJSONをドメインで使う型にマッピングします。
+
+page/index.tsx
+
+`import { GetStaticProps, NextPage } from 'next'
+import * as R from 'ramda'
+import React from 'react'
+
+import { BookListPartLabel } from '~/src/types/domain/googleAnalyticsEvents/Labels'
+
+
+type BookListItem = {
+  id: string
+  title: string
+  author: string
+  publishedAt: string
+  thumbnailUrl: string
+}
+
+type Props = {
+  bookGroups: {
+    heading: string
+    books: BookListItem[]
+    part: BookListPartLabel 
+  }[]
+}
+
+
+
+
+
+
+type TopPageBooksBody = {
+  heading: string
+  event_name: string
+  id: string
+  title: string
+  author: string
+  published_at: string
+  thumbnail_url: string
+}[]
+
+export const getStaticProps: GetStaticProps<Props> = async () => {
+  
+  const endpoint = GOOGLE_APPS_SCRIPT_TOP_PAGE_BOOKS
+  const authKey = process.env.AUTH_KEY
+  
+  const res = await fetch(`${GOOGLE_APPS_SCRIPT_TOP_PAGE_BOOKS}?auth_key=${authKey}`, { redirect: 'follow' })
+  const json: TopPageBooksBody = await res.json()
+
+  
+  
+  
+  
+  
+  
+  const groups = R.groupBy((book: TopPageBooksBody[number]) => book.heading)(json)
+  const bookGroups = Object.entries(groups).map(([heading, bookGroup]) => ({
+    heading,
+    part: bookGroup[0].event_name
+    books: bookGroup.map<BookListItem>((book) => ({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      publishedAt: book.published_at,
+      thumbnailUrl: book.thumbnail_url,
+    })),
+  }))
+
+  return {
+    props: { bookGroups },
+    revalidate: 300, 
+  }
+}
+
+export default Component`
+
+### 書籍表示用のコンポーネントのコード
+
+page/index.tsx
+
+`const Component: NextPage<Props> = (props) => (
+  <>
+    {}
+    <HeroComponent />
+
+    {}
+    <section className={css['bookList']}>
+      {props.bookGroups.map((group) => (
+        
+        
+        <div className={css['bookList__content']} key={group.heading}>
+          <h2 className={css['bookList__heading']}>{group.heading}</h2>
+          <ul className={css['bookList__list']}>
+            {group.books.map((book, i) => (
+              <li className={css['bookList__item']} key={i}>
+                <Link href={`${PATH.SITE_BOOK}/${book.id}`}>
+                  <a className={css['bookList__itemLink']}>
+                    <BookListItempart={group.part}src={book.thumbnailUrl}title={book.title}author={book.author}publishedAt={book.publishedAt}/>
+                  </a>
+                </Link>
+              </li>))}
+          </ul>
+        </div>))}
+    </section>
+  </>
+)`
+
+5分ごとに API をコールして、スプレッドシートに更新があればページを再ビルドするようにしています。
+
+また、JSON をドメインで利用する型にマッピングするために、[ramda.js の groupBy 関数](https://ramdajs.com/docs/#groupBy)を使っています。ramda.js は関数型プログラミングのスタイルのライブラリです。JS に組み込まれていない便利なロジックを数多く備えています。
+
+groupBy 関数を使って、heading（見出し）ごとに書籍をグルーピングしています。
+
+また、以下は page/index.tsx 内で利用している BookListItem コンポーネントで、書籍の表示を担っています。なお、next/image は利用していません。特に変わったところのない一般的なコンポーネントですが、 pages/index.tsx との整合性のために掲載しています。
+
+BookListItem.tsx
+
+`import React from 'react'
+import LazyLoad from 'react-lazyload'
+
+import { event } from '~/src/lib/googleAnalytics/gtag'
+import { BookListPartLabel } from '~/src/types/domain/googleAnalyticsEvents/Labels'
+
+import css from './style.module.scss'
+
+type Props = {
+  part: BookListPartLabel
+  src: string
+  title: string
+  author: string
+  publishedAt: string
+}
+
+const Component: React.FC<Props> = (props) => (
+  <button
+    className={css['bookList__itemButton']}type="button"onClick={() =>
+      
+      event({
+        action: 'click',
+        category: 'book',
+        label: { part: props.part, title: props.title },
+      })
+    }>
+    <LazyLoad>
+      <div className={css['bookList__itemCover']}>
+        <img className={css['bookList__itemCoverImage']} src={props.src} alt={props.title} />
+      </div>
+    </LazyLoad>
+    <div className={css['bookList__itemInformation']}>
+      <p className={css['bookList__itemTitle']}>{props.title}</p>
+      <p className={css['bookList__itemAuthor']}>{props.author}</p>
+      <small className={css['bookList__itemPublication']}>{props.publishedAt}</small>
+    </div>
+  </button>
+)
+
+export default Component`
+
+![](https://panda-program.com/media/2020/12/25/2020_12_25__4.png)
+
+onClick のイベントハンドラで Google Analytics のイベントを発火させています。
+
+これで ISR で5分ごとに API をコールし、スプレッドシートに変更があればページを再ビルドするトップページを作成できました🎉
+
+## スプレッドシートのデータをJSONで返却するGASのコード
+
+最後に、スプレッドシートのデータを返却するコードを掲載します。GAS は clasp を使って TypeScript で記述し、デプロイしています。
+
+スプレッドシートの権限については、チーム内は編集権限、また社内のリンクを知っている人には閲覧権限を付与しています。
+
+一方、API は全てのデータを返却するため、SSG、ISR でのリクエスト時に GET のパラメータで`auth_key`を渡すようにします。SSG、ISR はサーバーからのリクエストなので、auth_key がユーザーに漏れることはありません。
+
+なお、プロジェクト内で`@types/google-apps-script`を install しています。
+
+main.ts
+
+`const AUTH_KEY = 'some_key'
+const SHEET_ID = 'sheet_id'
+const SHEET_NAME = '書籍一覧'
+
+type Book = {
+  heading: string
+  event_name: string
+  id: string,
+  title: string,
+  author: string,
+  published_at: string,
+  thumbnail_url: string,
+}
+
+type Books = Book[]
+
+const doGet = (e) => {
+  
+  const authKey = e.parameter.auth_key
+
+  
+  if (!authKey || authKey !== AUTH_KEY) {
+    
+    return createText('401 unauthorized. Invalid auth_key.')
+  }
+
+  
+  const rows = findAll(SHEET_ID)
+  
+  const books = rows.map(row => array2Obj(row))
+  
+  return encode(books)
+}
+
+const findAll = (sheetId: string): string[][] => {
+  const sheet = SpreadsheetApp.openById(sheetId).getSheetByName(SHEET_NAME)
+  const lastRow = sheet.getLastRow()
+
+  return sheet.getRange(2, 1, lastRow - 1, 7).getValues()
+}
+
+const array2Obj = (array: string[]): Book => {
+  
+  const [heading, event_name, id, title, author, published_at, filename] = array
+  return {
+    heading,
+    event_name,
+    id,
+    title,
+    author,
+    published_at,
+    thumbnail_url: `/book/thumbnail/${id}/${filename}`}
+}
+
+const encode = (data: Books): GoogleAppsScript.Content.TextOutput => {
+  const json = JSON.stringify(data)
+  const output = ContentService.createTextOutput(json)
+  return output.setMimeType(ContentService.MimeType.JSON)
+}
+
+const createText = (text): GoogleAppsScript.Content.TextOutput => {
+  const output = ContentService.createTextOutput(text)
+  return output.setMimeType(ContentService.MimeType.TEXT)
+}`
+
+## React Server Componentについて
+
+この記事を執筆する数日前に [React Server Components](https://reactjs.org/blog/2020/12/21/data-fetching-with-react-server-components.html) が発表されました。上記、 ISR で実現したことはまさに React Server Component のユースケースに合致しそうだなと思いました。
+
+## まとめ
+
+今年は Next.js と Vercel 社にとって飛躍の年でした。Next.js は SSR の他にも SSG、ISR の機能追加や、 Dynamic Routing が実装されたり、Chrome チームと共同開発した Image コンポーネントや、Web Vitals アナリティクスの組み込み関数、i18n 対応のための機能など便利な機能を備えることで、React のフレームワークとしての地位を確固たるものにしています。10月には初の Next.js カンファレンスが開催されたことも記憶に新しいです。
+
+また、Next.js を開発している Vercel 社は 6月に約20億円の調達を発表しましたが、12月にさらに約40億円を調達したそうです。調達した資金を使って、Web の開発体験をさらに発展させて欲しいですね。
+
+Vercel 社が Web 開発者に大きな力を与える一方、Next.js や Vercel を利用する私たち（このブログは Vercel にデプロイしています）一般の開発者も情報を発信して周囲に広めたり、初学者の疑問に答えることで Next.js コミュニティを発展させていければと思います。
+
+嬉しいことに、サーバーサイドエンジニアが多数在籍する弊社の新プロジェクトで Next.js の採用が決まったと聞きました。来年も引き続き Next.js を使い、情報発信をして、この素晴らしい OSS を応援していきたいと思います！
+
+![](https://panda-program.com/media/2020/12/25/2020_12_25__5.png)
+
+ちょうど数日前に、Next.js カンファレンスのパーカーが届きました！デベロップ・プレビュー・シップ！
+
+今年も一年お疲れ様でした。またどこか、Next.jsに関するところでお会いしましょう😊

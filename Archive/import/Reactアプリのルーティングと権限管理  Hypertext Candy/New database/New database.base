@@ -1,0 +1,19 @@
+# New database
+
+filters:
+  and:
+    - note["base"] == link("New database.base")
+properties:
+  file.name:
+    displayName: Title
+  認証状態に関係なくアクセスできる。:
+    displayName: 認証状態に関係なくアクセスできる。
+  /:
+    displayName: /
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - 認証状態に関係なくアクセスできる。
+      - /

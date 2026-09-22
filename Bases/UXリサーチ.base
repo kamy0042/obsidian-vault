@@ -1,0 +1,22 @@
+# UXリサーチ
+
+filters:
+  and:
+    - file.hasTag("topic/デザイン/UXリサーチ")
+properties:
+  file.name:
+    displayName: Name
+  Created:
+    displayName: Created
+  Tags:
+    displayName: Tags
+  URL:
+    displayName: URL
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - Created
+      - Tags
+      - URL

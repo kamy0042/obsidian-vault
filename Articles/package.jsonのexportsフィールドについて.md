@@ -1,0 +1,185 @@
+---
+タグ: []
+作成日時: 2024-03-07T16:57:00
+URL: https://zenn.dev/makotot/articles/5edb504ef7d2e6
+Tags: [topic/デザインシステム/配信基盤]
+---
+![[og-base-w1200-v2 7.png]]
+
+npm パッケージとして複数のエントリーポイントを公開したい場合、`main`フィールドは単一のエントリーポイントしか受け付けないので、`exports`フィールドを利用することになると思うけども、その仕様等についての確認メモ。
+
+> 
+> In a package’s package.json file, two fields can define entry points for a package: "main" and "exports". The "main" field is supported in all versions of Node.js, but its capabilities are limited: it only defines the main entry point of the package.
+> 
+> [https://nodejs.org/api/packages.html#package-entry-points](https://nodejs.org/api/packages.html#package-entry-points)
+
+具体的には、以下のような形で
+
+```plain text
+import { a, b } from "@my-org/my-package";
+
+```
+
+ではなく
+
+```plain text
+import a from "@my-org/my-package/a";
+import b from "@my-org/my-package/b";
+
+```
+
+として、同じnpmパッケージの複数のエントリーポイントから`import`するモジュールを定義する手段として`exports`フィールドに着目してみる。
+
+`exports`フィールドの有無にかかわらず
+
+```plain text
+import x from "@my-org/my-package/sub/dir/module/x";
+
+```
+
+とすることは可能なので、どちらかというと`import`できるモジュールを明示的にコントロールする手段としての確認。
+
+主に [Modules: Packages | Node.js v18.1.0 Documentation](https://nodejs.org/api/packages.html) の内容に目を通しながら確認する。
+
+## `exports`フィールド
+
+`exports`フィールドは、Node.js [v12.7.0](https://nodejs.org/es/blog/release/v12.7.0/) から利用できるようになったフィールドで、`main`と同じようにエントリーポイントを定義する役割を持っていて、`exports`によってパッケージとしてのインターフェースを定義できるもの。
+
+公開するものを定義するので反対にそれ以外のものは全て非公開となって、パッケージを利用する側からすると非公開のものはモジュールとして読み込めないものとなる。
+
+なので、`exports`に指定漏れているとモジュールが意図せずに利用できなくなってしまう状況が起こり得る（[`ERR_PACKAGE_PATH_NOT_EXPORTED`](https://nodejs.org/api/errors.html#err_package_path_not_exported)エラーが発生する）。
+
+パッケージとしてのインターフェースを明確にすることでパッケージ提供側と利用側それぞれが提供・利用するものを安全にやりとりできる仕組みになるというのがメリットになるはず。
+
+パッケージとしてカプセル化できなくても問題ないということであれば、`export`フィールドで`"./*": "./*"`のように指定することでパッケージに含まれる全てのファイルをカプセル化しないことも可能ではある。
+
+指定可能な形式としては`<Object> | <string> | <string[]>`があり、オブジェクトの形であれば記述順がそのまま優先度となる。
+
+指定するパスは全て`./`で始まる相対ファイルパスの形でなければならない。
+
+export するものが少なければ明確にそれぞれのパスを定義することを推奨しているけどもパスが膨大な量に及ぶ場合にはパスのパターンで指定することも可能。
+
+```plain text
+"exports": {
+  "./features/*": "./features/*.js"
+},
+
+```
+
+`/*`は直下のディレクトリだけでなく、その配下のディレクトリ全てを含む。
+
+`exports`フィールドを実際にすでに利用しているnpmパッケージの一例としては[Preact](https://preactjs.com/)があり、その`package.json`の`exports`フィールドは以下のような形になっている。
+
+### `package.json`でのエントリーポイントの取り扱いについて
+
+`main` と`exports`の両方が存在する場合、`exports`が優先される。`exports`が優先されるけどもメインのエントリーポイントを設定する上で`main`と`exports`の両方を定義しておくことが推奨されている。
+
+`main`フィールドは`exports`がサポートされていない環境でのフォールバックになるという意味合いがあると思う。
+
+### `module`フィールドは？
+
+ESModule向けに`module`フィールドもサポートしているバンドルツールや利用しているパッケージがあると思うけど、Node.jsは`type`フィールドでの`module`によってESModule扱いとしていて`module`フィールド自体をサポートはしていない。
+
+### Conditional exports
+
+Node.js [v12.16.0](https://nodejs.org/de/blog/release/v12.16.0/) で追加された、条件次第で異なるパスを指定できるようにするもの。条件として指定できるのは、`node-addons`、`node`、`import`、`require`、`default`など。これによって ES Modules と CommonJS のように環境ごとで異なるエントリーポイントをパス指定可能になる。
+
+以下のように`import`の場合はこのファイル、`require`の場合はこのファイル、というような形で、パッケージの提供側が参照するファイルを指定することでパッケージ利用者側は特にどのファイルを見に行く必要があるかをモジュール形式を問わず気にしないで済む利点がありそう。
+
+```plain text
+"exports": {
+  "import": "./hello-world.js",
+  "require": "./hello-world.cjs"
+},
+
+```
+
+### パッケージ自身の参照
+
+なお、`exports`のフィールドに定義されているモジュールはパッケージの`name`フィールドとの組み合わせでそのパッケージ内において参照することができる。
+
+```plain text
+"name": "module-exports-playground",
+"exports": {
+  ".": "./hello-world.js"
+},
+
+```
+
+↑ のように`hello-world.js`を`exports`フィールドで指定しておくと
+
+```plain text
+import helloWorld from "module-exports-playground";
+
+```
+
+といった形で同じパッケージ内において自身を参照可能になる。
+
+## TypeScript
+
+`exports`フィールドの指定に応じて型定義ファイルを参照することが必要になると思うけど、TypeScript v4.7 でサポートされる予定になっている。
+
+v4.7 以降サポートされるようになると、以下のような形で`exports`フィールドの指定に応じて`types`フィールドで型定義ファイルを指定できるようになる。
+
+```plain text
+"exports": {
+    ".": {
+        "import": {
+            "types": "./types/hello-world.d.ts",
+            "default": "./hello-world.js"
+        },
+...
+
+```
+
+デフォルトでは、そのモジュールに対応する型定義ファイルを`import`と同じようにして探すので`types`を指定しなくても良いけど、型定義ファイルのパスがそれでは見つけられない場合に`types`を指定する必要がある。
+
+> 
+> The new support works similarly with [import conditions](https://nodejs.org/api/packages.html). By default, TypeScript overlays the same rules with import conditions – if you write an import from an ES module, it will look up the import field, and from a CommonJS module, it will look at the require field. If it finds them, it will look for a corresponding declaration file. If you need to point to a different location for your type declarations, you can add a "types" import condition.
+> 
+> [https://devblogs.microsoft.com/typescript/announcing-typescript-4-7-rc/#package-json-exports-imports-and-self-referencing](https://devblogs.microsoft.com/typescript/announcing-typescript-4-7-rc/#package-json-exports-imports-and-self-referencing)
+
+`exports`フィールドをサポートしていないTypeScript向けに、`main`フィールドと同じように`types`フィールドもフォールバックとしてあると良さそう。
+
+```plain text
+"exports": {
+    ".": {
+        "import": {
+            "types": "./types/hello-world.d.ts",
+            "default": "./hello-world.js"
+        },
+    },
+},
+"types": "types/index.d.ts",
+"main": "index.js"
+
+```
+
+TypeScript v4.7は今月の24日にリリース予定。
+
+### `typesVersions`
+
+`exports`フィールドがないv4.7以前でどうにかしたい場合の代替方法として[`typesVersions`](https://github.com/microsoft/TypeScript/issues/33079#issuecomment-860721524)[を利用することで型定義を参照できるようにする方法もあるのかも](https://github.com/microsoft/TypeScript/issues/33079#issuecomment-860721524)しれない。
+
+ただ、`typesVersions`はTypeScriptの異なるバージョン毎に参照する型定義ファイルを切り替えられるようにするものだと思うので、本来の用途とは異なる形での利用となるはず。
+
+> 
+> As an example, if you maintain a library which uses the unknown type from TypeScript 3.0, any of your consumers using earlier versions will be broken. There unfortunately isn’t a way to provide types for pre-3.0 versions of TypeScript while also providing types for 3.0 and later.
+> 
+> That is, until now. When using Node module resolution in TypeScript 3.1, when TypeScript cracks open a package.json file to figure out which files it needs to read, it first looks at a new field called typesVersions.
+> 
+> [https://devblogs.microsoft.com/typescript/announcing-typescript-3-1/#version-redirects-for-typescript-via-typesversions](https://devblogs.microsoft.com/typescript/announcing-typescript-3-1/#version-redirects-for-typescript-via-typesversions)
+
+## `exports`のバンドルツールでのサポート状況
+
+Webpackのドキュメントでは`exports`フィールドに関するサポート状況について項目毎に表などで詳しくまとまっている。
+
+## まとめ
+
+npmパッケージの提供側が明確に公開するモジュールを制限できたり、モジュール種別を利用者側では気にしないようにできたり、npmパッケージの提供側がパッケージをどのように利用してもらうかをコントロールできるところで利点がありそう。
+
+TypeScriptでのサポートが間もなく入ることでより一層利用しやすくなるかもしれない。
+
+## 参考資料
+
+[GitHubで編集を提案](https://github.com/makotot/zenn-content/blob/main/articles/5edb504ef7d2e6.md)

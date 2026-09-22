@@ -1,0 +1,475 @@
+---
+URL: https://blog.hiroppy.me/entry/webpack5
+Updated: 2021-11-06T22:49:00
+Created: 2021-09-03T20:52:00
+Tags: [topic/技術/ビルドツール]
+---
+予定では、明日の10日にwebpackのメジャーバージョンであるv5がリリースされますが、まだエコシステムが安定していない可能性があるため、注意してアップグレードを行ってください。
+
+change log:
+
+移行ガイド:
+
+- [追加機能](https://blog.hiroppy.me/entry/webpack5)
+
+## 追加機能
+
+### Persistent Caching
+
+このバージョンからは今までメモリ上でしか行ってなかった[ファイルシステム](http://d.hatena.ne.jp/keyword/%A5%D5%A5%A1%A5%A4%A5%EB%A5%B7%A5%B9%A5%C6%A5%E0)によるキャッシュが導入されます。以下のように設定することにより、大幅な速度改善が見込めます。
+
+```plain text
+module.exports = {
+  cache: {
+    type: 'filesystem',
+    buildDependencies: {
+      config: [__filename]
+    }
+  }
+};
+
+```
+
+なし ↓
+
+```plain text
+asset main.js 36.3 KiB [emitted] [minimized] (name: main)
+orphan modules 584 KiB [orphan] 554 modules
+cacheable modules 117 KiB
+  ./src/index.js + 103 modules 117 KiB [built] [code generated]
+  ./src/foo.js 21 bytes [built] [code generated]
+webpack 5.0.0-rc.2 compiled successfully in 1836 ms
+```
+
+あり↓
+
+```plain text
+asset main.js 36.3 KiB [compared for emit] [minimized] (name: main)
+cached modules 700 KiB [cached] 556 modules
+webpack 5.0.0-rc.2 compiled successfully in 429 ms
+```
+
+詳しくは以下の記事を参照にしてください。
+
+### Module Federation
+
+[リポジトリ](http://d.hatena.ne.jp/keyword/%A5%EA%A5%DD%A5%B8%A5%C8%A5%EA)間(バンドル間)を跨ぐときにライブラリなどの重複しているコードを以下のように効率よく扱いバンドルサイズを下げる仕組みです。この機能はお互いのwebpackと連携を取り合う必要があるため互いにwebpack@5である必要があります。
+
+![[20200507073925.png]]
+
+詳しくは以下の記事を参考にしてください。
+
+### assetModules typeの追加
+
+今まで画像などを読み込むときに、file-loaderやurl-loader, raw-loaderなどを使っていましたがそれがネイティブサポートされました。
+
+```plain text
+module.exports = {
+  output: {
+    assetModuleFilename: 'images/[hash][ext]',
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(png|jpg|gif)$/,
+        type: 'asset/resource'
+      }
+    ]
+  }
+};
+
+```
+
+詳しくは以下の記事を参考にしてください。
+
+### チャンク名がIDへ変更
+
+今まで以下のように`webpackChunkName`と書かなければ読めないファイル名となっていましたが、人が読める形となります。それに伴い、開発中での`webpackChunkName`の指定をする必要がなくなることが期待されます。
+
+```plain text
+(async () => {
+  await import(/* webpackChunkName: "foo" */ './foo');
+})();
+
+```
+
+名前をつけたときの出力
+
+```plain text
+asset main.js 2.79 KiB [emitted] [minimized] (name: main)
+asset foo.js 114 bytes [emitted] [minimized] (name: foo)
+runtime modules 7.23 KiB 10 modules
+cacheable modules 217 bytes
+  ./src/index.js 190 bytes [built] [code generated]
+  ./src/foo.js 27 bytes [built] [code generated]
+webpack 5.0.0-rc.4 compiled successfully in 274 ms
+```
+
+v5のデフォルトでは以下のように`deterministic`という設定の新しい[アルゴリズム](http://d.hatena.ne.jp/keyword/%A5%A2%A5%EB%A5%B4%A5%EA%A5%BA%A5%E0)が追加され、モジュール/チャンクの名前に3~4桁の数値IDが付与されるようになります。これにより、ハッシュ化されたモジュールIDによる[gzip](http://d.hatena.ne.jp/keyword/gzip)でのパフォーマンス低下は修正されました。
+
+```plain text
+asset main.js 2.79 KiB [emitted] [minimized] (name: main)
+asset 717.js 114 bytes [emitted] [minimized]
+runtime modules 7.23 KiB 10 modules
+cacheable modules 186 bytes
+  ./src/index.js 159 bytes [built] [code generated]
+  ./src/foo.js 27 bytes [built] [code generated]
+webpack 5.0.0-rc.4 compiled successfully in 283 ms
+```
+
+ファイル名を自動的に付与したい場合
+
+```plain text
+module.exports = {
+  optimization: {
+    chunkIds: 'named'
+  }
+};
+
+```
+
+```plain text
+asset main.js 2.8 KiB [emitted] [minimized] (name: main)
+asset src_foo_js.js 123 bytes [emitted] [minimized]
+runtime modules 7.23 KiB 10 modules
+cacheable modules 186 bytes
+  ./src/index.js 159 bytes [built] [code generated]
+  ./src/foo.js 27 bytes [built] [code generated]
+webpack 5.0.0-rc.4 compiled successfully in 256 ms
+```
+
+`optimization.chunkIds` に `named` を追加すればファイル名が確定しますが本番環境では表示されていいものなのかを検討してください。また、`optimization.splitChunks.name`はなくなったのでこちらに移行してください。
+
+### import.metaのサポート
+
+```plain text
+// ./src/index.js
+console.log(import.meta.url);
+console.log(import.meta.webpack);
+
+```
+
+```plain text
+// ./dist/main.js
+// 生成されたファイルは固定値として入り、import.meta.url, webpackは存在しなくなる
+console.log("file:///Users/hiroppy/webpack/src/index.js");
+console.log(5);
+
+```
+
+また、HMR時に今までは以下のように書いていましたが、これからは`import.meta.webpackHot`を使うことが可能です。これを使うことにより、Node.jsのmoduleへの依存を減らし、ESMに沿うような書き方に変わります。
+
+```plain text
+// <= 4
+if (module.hot) {
+  module.hot.accept();
+}
+
+// >= 5
+if(import.meta.webpackHot) {
+  import.meta.webpackHot.accept();
+}
+
+// or
+import.meta.webpackHot?.accept();
+
+```
+
+### `data`, `file`, `http(s)`の[プロトコル](http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%C8%A5%B3%A5%EB)のサポート
+
+```plain text
+import x from 'data:text/javascript,export default 42';
+console.log(x); // 42
+
+import y from 'file:///Users/hiroppy/webpack/src/index.js';
+
+```
+
+また、フラグメント(`#`)もサポートされました。
+
+```plain text
+const eIndexOf = require('es5-ext/array/\0#/e-index-of#fragment');
+
+```
+
+http(s)[プロトコル](http://d.hatena.ne.jp/keyword/%A5%D7%A5%ED%A5%C8%A5%B3%A5%EB)は、まだ完全にサポートされていないため以下の設定が必要です。
+
+```plain text
+const webpack = require('webpack');
+
+module.exports = {
+  plugins: [
+    new webpack.experiments.schemes.HttpUriPlugin(),
+    new webpack.experiments.schemes.HttpsUriPlugin()
+  ]
+};
+
+// index.js
+import codeOfConduct from 'https://raw.githubusercontent.com/webpack/webpack/master/CODE_OF_CONDUCT.md';
+console.log(codeOfConduct);
+
+```
+
+### Native Workerのサポート
+
+`new Worker(new URL('...', import.meta.url))`がWebWorkerを作るようにサポートされました。これはSharedWorkerも同様です。
+
+```plain text
+const fooWorker = new SharedWorker(new URL("./foo-worker.js", import.meta.url), {
+  name: 'foo'
+});
+
+```
+
+### publicPathの自動化
+
+新しくデフォルト値として`auto`が追加され、`document.currentScript`, `document.getElementsByTagName('script')`, `self.location` の中から自動的に決定されます。注意点として、[IE](http://d.hatena.ne.jp/keyword/IE)では`document.currentScript`がサポートされていないため、deferred か async の[スクリプト](http://d.hatena.ne.jp/keyword/%A5%B9%A5%AF%A5%EA%A5%D7%A5%C8)には使用することができません。
+
+```plain text
+module.exports = {
+  output: {
+    publicPath: 'auto'
+  }
+};
+
+```
+
+### Tree Shakingの最適化
+
+ネストされたモジュールの場合、今までは使われていない`b`は削除できませんでしたがv5からは追跡可能となりできるようになりました。
+
+```plain text
+// inner.js
+export const a = 1;
+export const b = 2;
+
+// module.js
+import * as inner from "./inner";
+export { inner }
+
+// user.js
+import * as module from "./module";
+console.log(module.inner.a);
+
+```
+
+v4では、モジュールの関係性しか見ていませんでしたが、v5から入った`optimization.innerGraph`により、内部モジュールへの最適化も行えるようになりました。
+
+```plain text
+import { something } from "./something";
+
+function usingSomething() {
+  return something;
+}
+
+export function test() {
+  return usingSomething();
+}
+
+```
+
+以下のケースが対象です。
+
+- 関数宣言
+- クラス宣言
+- 変数宣言 及び `export default`
+
+`Optimization.sideEffects`では、[ソースコード](http://d.hatena.ne.jp/keyword/%A5%BD%A1%BC%A5%B9%A5%B3%A1%BC%A5%C9)から副作用のないモジュールの単純なケースを検出できるようになりました。クラスおよび関数宣言、簡単なinit式を使用した変数宣言、`if`、`while`、`for`、`switch`、`export`、`import`、簡単なフラグを使用した関数呼び出し 等です。
+
+また、CJSもサポートされました。
+
+- `module.exports = require('...')`
+- `module.exports.a.b.c = require('...').a.b.c`
+- `Object.defineProperty(module.exports, 'xxx', ...)`
+- `require('abc').xxx`
+
+このサポートは、ESM、CJS間でも動くので、今後どちらのモジュールシステムを使っているかを気にせずに最適化行えるようになります。
+
+これは別の記事で詳細に説明するので予定です。
+
+### output.filename, output. chunkFilenameの関数化
+
+`output.filename`は今まで文字列しか受け取りませんでしたが、関数にすることが可能となったため更に柔軟な設定を表現することが可能となります。
+
+```plain text
+module.exports = {
+  output: {
+    filename: ({ chunk }) => {
+      if (chunk.name === 'main') return 'main.bundle.[contenthash].js';
+      return 'foo.bundle.[contenthash].js'
+    }
+  }
+};
+
+```
+
+### externalsTypeの追加
+
+`externalsType`に`promise`, `import`, `script`が追加され、より柔軟に対応できるようになりました。
+
+- promise: `var`と同様だが、非同期モジュールとなる
+- import: `import()`を使い、非同期のネイティブESMモジュールを読み込む
+- script: `<script>`を使い、事前に定義された[グローバル変数](http://d.hatena.ne.jp/keyword/%A5%B0%A5%ED%A1%BC%A5%D0%A5%EB%CA%D1%BF%F4)を公開する[スクリプト](http://d.hatena.ne.jp/keyword/%A5%B9%A5%AF%A5%EA%A5%D7%A5%C8)を読み込む
+
+```plain text
+module.exports = {
+  externalsType: 'promise'
+};
+
+```
+
+### targetの詳細化とbrowserslistのサポート
+
+`target`に対して、詳細な設定ができるようになりました。 配列を受け取るようになり、`target: ['web', 'es2015']` 等の書き方が行えるようになりました。 また、browserslistがされたため、`web`の場合は`target`の設定は不要となります。
+
+デフォルト値は`target: 'browserslist'`となり、フォールバック先は変わらずに`web`となります。
+
+### TypeScript型定義ファイルの提供
+
+`@types/webpack`は不要になりました。
+
+```plain text
+import { WebpackOptionsNormalized } from 'webpack';
+
+const config: WebpackOptionsNormalized = {
+  entry: 'index.js',
+  output: {
+    filename: 'bundle.js'
+  }
+};
+
+```
+
+### splitChunksでのサイズ設定値の変更
+
+今までは、JSのみのチャンクサイズでしたが、さらに詳細に指定できるようになりました。
+
+```plain text
+module.exports = {
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        test: {
+           name: 'test',
+           minSize: {
+             javascript: 100,
+             webassembly: 100,
+             style: 100,
+          }
+        }
+      }
+    }
+  }
+};
+
+```
+
+また、本番環境での`minSize`のデフォルト値は`20k`となりました。
+
+## 実験的段階
+
+### top-level-awaitのサポート
+
+[シンタックス](http://d.hatena.ne.jp/keyword/%A5%B7%A5%F3%A5%BF%A5%C3%A5%AF%A5%B9)はESMの仕様に沿いますが、まだstage-3なので実験的フェーズです。
+
+```plain text
+// webpack.config.js
+module.exports = {
+  experiments: {
+    topLevelAwait: true,
+  }
+};
+
+```
+
+```plain text
+const x = await import('file:///Users/hiroppy/Desktop/webpack-5/src/foo.js');
+
+console.log(x);
+
+```
+
+### scriptタグでのモジュールサポート
+
+バンドル時に使われるIIFEが取り除かれ、`<script type="module">`経由で呼び出される形に出力されます。この場合、仕様に沿い厳格モードと遅延ロードが有効化されます。
+
+```plain text
+module.exports = {
+  experiments: {
+    outputModule: true
+  }
+};
+
+```
+
+## 破壊的変更
+
+### 最低要求バージョンがNode.js@10へ
+
+webpack及びwebpackのコアにおけるエコシステムが要求するNode.jsのバージョンの最低値は10となります。
+
+### Node.jsのpolyfillの自動挿入が廃止
+
+メンバー間でも賛否両論がありましたが、理由としては以下のような目的があります。
+
+- webpackはwebへ向かっている
+- polyfill自体が完全互換なものではない
+- メンテナンスコストの高さ
+
+自分が経験した例としては、`process`や`util`に依存しているNode.jsのコードをクライアントサイドで使う場合があり、v5に上げたら動かなくなる場合があります。
+
+実際にwebpack4まで使っていたpolyfillは以下の[リポジトリ](http://d.hatena.ne.jp/keyword/%A5%EA%A5%DD%A5%B8%A5%C8%A5%EA)で管理されているので、これを参考にして各自で追加する必要があります。
+
+これに伴い、`node.*`の中のネイティブモジュールがすべて廃止となります。 また、`global`, `__filename`, `__dirname`はデフォルトで`false`の値となります。
+
+```plain text
+module.exports = {
+  node: {
+    // Buffer: false, これは廃止
+    global: false,
+    __filename: false,
+    __dirname: false,
+  }
+};
+
+```
+
+### [JSON](http://d.hatena.ne.jp/keyword/JSON)でのnamed exportの禁止
+
+ESMの仕様上、これは許可されていないためこれが行われているコードの場合警告が出るようになるため、以下のように変更する必要があります。
+
+```plain text
+// 😵
+import { version } from './package.json';
+
+// 🙂
+import package from './package.json';
+const { version } = package;
+
+```
+
+### loaderとuseの違いを厳格化
+
+`rules.loader`と`rules.use`で目的に合ってない使い方の設定の場合、エラーを吐くようになりました。 `use`は`options`がない場合のみ使用可能(引数は受け入れ可)となり、`options`がある場合は`loader`を使わなければなりません。
+
+> 細かい変更ですが、ユーザーへの影響が大きいものの一つとして、webpack@5では以下のようなルールとなり、設定ファイルのエラーとなり、実行できなくなります。use -> optionsがない場合のみ使用可能(引数は受け入れ可)loader -> loaderに引数を付ける場合、useに変更するように pic.twitter.com/qqmsoWWzWn— hiroppy (@about_hiroppy) September 14, 2020
+
+### デフォルトランタイムが一部ES2015へ変更
+
+webpackの生成するコードのデフォルトが一部es5からes2015となります。 
+ これはあくまでもバンドルサイズを減らすことが目的なため、`var`から`const`にはなったりせず、`function`を`() => {}` となります。
+ もし[IE](http://d.hatena.ne.jp/keyword/IE)をサポートしている場合は以下を追加する必要があります。
+
+```plain text
+module.exports = {
+  target: ['web', 'es5']
+};
+
+```
+
+また、これは追加機能として用意されたbrowserslistを用いて回避することも可能です。
+
+```plain text
+# browserslist
+last 1 version
+```

@@ -1,0 +1,24 @@
+filters:
+  and:
+    - or:
+        - file.hasTag("topic/アクセシビリティ")
+        - file.hasTag("topic/アクセシビリティ/WCAG")
+        - file.hasTag("topic/アクセシビリティ/WAI-ARIA")
+    - file.hasTag("type/リソース")
+properties:
+  file.name:
+    displayName: 名前
+  タグ:
+    displayName: タグ
+  作成日時:
+    displayName: 作成日時
+  URL:
+    displayName: URL
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - タグ
+      - 作成日時
+      - URL

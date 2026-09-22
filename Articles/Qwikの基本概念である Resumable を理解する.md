@@ -1,0 +1,309 @@
+---
+Created: 2022-10-25T11:53:00
+URL: https://zenn.dev/aiji42/articles/fafa354f79660d
+Tags: [topic/技術/フロントエンド]
+---
+この記事は [Cloudflare Workers and micro-frontends: made for one another](https://blog.cloudflare.com/better-micro-frontends/) のブログを理解するためのに Qwik の基本的な概念について理解することを目的とした記事です。
+
+上記ブログに関しては、[@laiso](https://zenn.dev/laiso) さんがわかりやすく解説してくれています。
+
+本記事が、これらの記事やブログを読んで Qwik に付いて深堀りしたくなった方のお役に立てれば幸いです。
+
+また、後日私の方でも、上記記事の解説や補足を何かしらの方法でまとめたいと思っています。
+
+## What is Qwik ?
+
+Qwikは [builder.io](https://www.builder.io/) によって作られた、フロントエンドライブラリです。
+
+SSRをデフォルトとし、Cloudflare Workers などでのエッジレンダリングにも対応しています。
+ jsxで記述し、また hooks(useXxx) の概念があるため、React ユーザの方は理解しやすいと思います。
+
+Qwik City というライブラリも合わせて作られており、Qwik が基本的なコンポネントライブラリで、こちらはファイルベースのルーティングやレイアウト、SSGなどを可能にするエンハンスドなライブラリです。
+
+React で例えるのであれば、Qwik が React、Qwik City が Next.js や Remix のような位置づけになります。
+
+## Qwikのコンセプト
+
+![[d46393c4041573af08670126.png3fsha3d63604eb38423c3b68fb633c7ee715eb88101eb44]]
+
+https://qwik.builder.io/ より引用
+
+Qwik の登場背景には、昨今のフロントエンドライブラリが抱えるパフォーマンスの問題を解決する目的があります。
+
+### Hydration の問題
+
+SSR が盛んになる以前は、CSR が主流でした。
+
+![[CSR.png]]
+
+[https://laptrinhx.com/client-side-rendering-vs-server-side-rendering-which-one-is-better-44494895/](https://laptrinhx.com/client-side-rendering-vs-server-side-rendering-which-one-is-better-44494895/)
+
+サーバからjsをロードし、クライアントでレンダリングすべきDOM(仮想DOM)を計算し、マウントルートとなるエレメントの上にレンダリングするという手法です。
+ これにより、インタラクティブでリッチなコンテンツを簡単に開発可能になりました。
+
+しかし、CSRにはいくつかの問題がありました。
+ たとえば、その当時のクローラーはJSの実行が可能でなかったためコンテンツの評価ができません。(現在のクローラーはJSの実行が可能ではあるものの、静的なコンテンツと比較して、解釈するのに時間がかかるとされています。)
+ また、JSのロード及び実行にはマシンリソースを使用するため、ブラウジングの快適さはユーザクライアントのスペックに依存します。
+
+その問題を解決したのがSSR(SSG)です。
+
+![[SSR.png]]
+
+[https://laptrinhx.com/client-side-rendering-vs-server-side-rendering-which-one-is-better-44494895/](https://laptrinhx.com/client-side-rendering-vs-server-side-rendering-which-one-is-better-44494895/)
+
+SSRでは、サーバ上でページコンテンツのレンダリングを行い、レンダリング済みのHTMLをユーザのものとに返却します。
+ ユーザクライアントでは、初期のHTMLのみでほとんどレンダリングが完了しており、この状態であればクローラーもコンテンツの解釈が可能です。
+
+しかし、そのままでは、インタラクティブなコンテンツの操作(ボタンをクリックしたらモーダルが開くなど)ができません。
+ そこで、**Hydration** という手法を使って、コンテンツを操作可能にします。
+ 簡単に言うと、CSRと同じようにJSをロード・実行し、仮想DOMを計算しますが、レンダリング自体は行わず、初期HTMLにレンダリング済みのDOMと内容を比較して、インタラクティブにすべきコンテンツに対して、イベントリスナを登録するという処理です。
+ これにより、CSRと比較して遥かに低コストで、ユーザが操作可能な状態までステップを進めることができます。
+
+しかし、Hydration もまだ、パフォーマンス的に十分とは言えません。
+
+ページの表示自体は初期HTMLがロード完了した時点で済んでいますが、ユーザが操作が可能になるまでには、JSファイルをダウンロードし、パース、実行するという処理は以前残っており、ユーザのネットワークやマシンスペックに依存しているというCSRからある問題は解決できていません。
+ また、ページの大半が操作可能でない静的なページ(例えば、ヘッダ部分だけ操作可能だがそれ以外のメインコンテンツは静的な記事であるなど)、あるいは全くインタラクティブなパーツを含んでいない完全に静的なページでも、ページのコンポネントを構成するJSをすべてダウンロードし、DOMを計算しているという点はかわらず、無駄な処理に貴重なユーザのリソースを割いています。
+
+### Hydration vs Resumable
+
+![[assets252FYJIGb4i01jvw0SRdL5Bt252F04681212764f4025b2b5f5c6a258ad6e3Fformat3Dwebp26width3D2000.bin]]
+
+https://www.builder.io/blog/hydration-is-pure-overhead より引用
+
+そこでQwikがとったアプローチが **Resumable** です。
+
+詳しい処理の内容は後述しますが、簡単に説明すると、Hydration に当たる処理は行わず、ユーザの操作が行われてからJSをロード・実行するというものです。
+ こう書くと、Dynamic Import のような、遅延ロードを想像される方もいるかも知れませんが、それともまた異なります。
+ Qwik ではどのコンポネントのロードを遅延させるかという選択を意識することはありません。すべてのイベントが自動的に Resumable になるのです。
+
+昨今の新しいフレームワーク(Astro や Fresh など)では Partial(Island) Hydration という手法によって、問題を解決する動きがあります。 ページ全体を Hydrate するのではなく、インタラクティブな部分(コンポネント)のみを Hydrate することで、JSコードの削減や計算コストの削減をしています。 
+しかし、どの部分を Hydration 可能にするかが選択的であり、また、Partial な境界線を超えての処理ができないという欠点があるため、「それではスケーラビリティがない」とQwikは言っています。
+
+## Resumable の基本的概念
+
+### イベントリスナの Resume
+
+ある操作可能なボタンを Qwik で実装してみる例を見てみます。
+
+```plain text
+import { component$, useStore } from '@builder.io/qwik';
+
+export const App = component$(() => {
+  const store = useStore({ count: 0 });
+
+  return (
+    <div>
+      <p>Count: {store.count}</p>
+      <p>
+        <button onClick$={() => store.count++}>Click</button>
+      </p>
+    </div>
+  );
+});
+
+```
+
+これをブラウザで開くと、button はこのような HTML で出力されます。
+
+`on:click` という見慣れないアトリビュートが付いています。
+
+そして、buttonに対して関連付けられているイベントを見てみると、
+
+エレメントそのものに対してではなく、windowに対してイベントが設置されています。
+
+```plain text
+  <script type="qwik/json">
+    {"ctx":{"#2":{"r":"0!"}},"objs":[{"count":"1"},0],"subs":[["2 #0 0 #1 data count"]]}
+  </script>
+  <script id="qwikloader">
+    ...省略
+  </script>
+  <script>
+    window.qwikevents.push("click")
+  </script>
+
+```
+
+body の後方に、`window.qwikevents.push("click")`というスクリプトがあり、この処理がwindowに対してイベントリスナを登録しています。
+
+このページのHTMLの中でJSの記述はbody下部のここだけです。「...省略」となっているところには Qwik のクライアント初期化コードが記述されています。
+ head内で追加のスクリプトをロードするということもしていませんので、HTMLをロードした時点ではJSのダウンロードは行われません。
+
+また、`<script type="qwik/json">`には、SSRで得られたステートがシリアライズされています。サーバサイドで得たステートをブラウザで復元できるという点も Resumable コンセプトの一つです。
+ Next.js の getServerSideProps もある意味同じようなものですが、サーバサイドから一つのステートオブジェクトを得ているわけではなく、すべてのコンポネントがもつステートをそれぞれ再現可能にしている点が若干異なります。
+
+それでは、実際にボタンをクリックしてみましょう。
+
+ボタンクリックと同時に、`on:click`に記述されたJSをダウンロードしていることがわかります。
+ (疑い深い人は実際のExampleを開いて、Networkタブを確認してみてください。)
+
+このスクリプトには、`onClick$`で定義した処理そのものが、記述されています。
+
+```plain text
+// app_component_div_p_button_onclick_8dwua0cjar4.js
+import { a as useLexicalScope } from './app2.js';
+
+const App_component_div_p_button_onClick_8dWUa0cJAr4 = ()=>{
+    const [store] = useLexicalScope();
+    return store.count++;
+};
+
+export { App_component_div_p_button_onClick_8dWUa0cJAr4 };
+
+```
+
+簡単にまとめると、
+
+1. SSR でイベントリスナを関連付けるべきDOMに対し、ハンドラをシリアル化してアトリビュートに書き込む(`on:click`) 
+    - ステートもシリアル化してHTMLに書き込む(`<script type="qwik/json">`)
+2. クライアントで HTML がロードされると、Qwik の初期化コードを実行してステートを復元、さらに window に対してイベントハンドラが登録される。 
+    - 他にスクリプトをダウンロードしたりはしない
+3. ここで Hydration に当たる処理は終了
+4. ボタンをクリックすると、2で登録された window のイベントが発火し、アトリビュートに従って、追加スクリプトをダウンロード
+5. ダウンロードした追加スクリプトを実行して、実装されている挙動を再現する
+
+と言う流れになります。
+
+ここで重要なのは、イベントハンドラそのものの処理スクリプトは、実際にそのイベントが発火するまでロードされないと言うこと。
+ そして、イベントリスナが登録されるのは window に対してなので、操作可能なエレメントが増えても、2の処理は増加しないということです。
+
+イベントをハンドリングする要素の数ではなく、keyupやscrollなど、ページ内に出現するイベントの数で登録処理が増加します。
+
+### Prefetch Strategy
+
+ここまでで、勘が良い人は、「イベントリスナのスクリプトのロードが遅延されるということは、実際の操作では若干ラグを感じるのでは？」と懸念されるでしょう。
+
+もちろん Qwik はその問題に対して対策をとっています。基本的な戦略はスクリプトのプリフェッチです。
+
+Qwik のエントリーファイルは下記のような記述をします。開発者が選択したプリフェッチストラテジーと、マニフェストファイル(ビルド時に自動生成)により、Qwik はランタイムで必要になるであろうスクリプトのプリフェッチを行います。
+
+```plain text
+// src/entry.ssr.tsx
+export default function (opts: RenderToStreamOptions) {
+  return renderToStream(<Root />, {
+    manifest,
+    prefetchStrategy: {
+      implementation: {
+        // custom prefetching implementation
+      },
+    },
+    ...opts,
+  });
+}
+
+```
+
+Qwik 単体で使用可能なストラテジは、`<link rel />` によるプリフェッチと、Web Worker内でfetchを非同期に実行しキャッシュすることです。
+ しかし、それぞれ欠点があります。
+
+- `<link rel />` による prefetch はデバイスによってはサポートされていない 
+    - Safari は `modulepreload` をサポートしていない
+    - Firefox は https の場合 `link rel prefetch` をサポートしていない
+- `<link rel />` は同じリソースに対して重複したリクエストを行う可能性がある
+- Web Worker Fetch 
+    - ブラウザが閉じられるとキャッシュが破棄される可能性がある
+
+ここで Qwik City の出番です。 Qwik City を組み合わせることで、Service Worker によるネットワークのインターセプトが可能になり、Cache API によりきめ細かいキャッシュの利用が可能になります。
+
+つまり、大抵の場合は、プリフェッチによって実際にページを操作する前にスクリプトのダウンロードが終わっている状態になっているため、ユーザはほとんどラグなく操作結果を得ることが可能です。
+
+それでも「ということは、トータルでダウンロードするスクリプトの量は Next.js などのフレームワークと変わらないんじゃ...?」と思われるでしょう。
+
+その疑問と懸念に対して Qwik はFAQで答えています。
+
+要約すると
+
+- プリフェッチによってダウンロードは行われるが実行はしないので遥かに低コスト
+- あくまでインタラクティブな部分の追加スクリプトだけダウンロードする(Reactのようにすべてをダウンロードするわけではない)
+- そもそも細かくチャンクしている
+- プリフェッチされたコードのパースはメインスレッド以外で行われる
+- 仮にプリフェッチ中に操作が行われたら、インタラクションのチャンクのダウンロードを優先する
+
+と説明しています。
+
+実際には実行されないかもしれないスクリプトをダウンロードしている時点で、`Zero Loading` をうたうのは過大な気がしますが、それでも、既存のFWと比べればパフォーマンスが良さそうな感じがしますね。
+
+### コンポネントツリーの Resume
+
+コンポネントの再レンダリングも Resume の対象です。そして不必要な再レンダリングが起きにくい構造になっています。
+
+Hydration の説明の際にイベントにフォーカスして述べていましたが、Hydration によって有効にしたいのはイベントハンドラだけではありません。
+ 先のボタンの例を上げると、ボタンクリックによって、ステートの更新(カウンタのインクリメント)処理だけでなく、現在のカウンタを表示するには再レンダリングが必要です。
+ つまり、Hydration にはコンポネントツリーを計算し、ステートの変更に応じて再レンダリングするという一連の処理を有効にする役目もあります。
+
+Qwik ではそれを Resume で解決します。実際に、例を見てみましょう。inputに入力されたキーワードでサーバにリクエストし、検索結果を表示するというかんたんな例です。
+
+inputに対して入力を開始すると、`onInput$` に対してのスクリプトがダウンロードされ、続いて、ステートを監視して処理するための `useWatch$` のダウンロードが始まりました。
+ 更に遅れて、検索結果を得ると、再レンダリングして検索結果を表示するために、`AutoComplete = component$`に対応する、スクリプトがダウンロードされます。
+
+このように、イベントハンドラだけでなく、状態監視や再レンダリングのためのスクリプトも遅延ロード(Resume)の対象になります。
+
+そして実は、Resume 対象となるのは、`$`(ドルマーク)が付いたモジュールによって定義された処理です。`SuggestionsListComponent` は `component$` でラップされていないので、チャンクされずに `AutoComplete` 内にバンドルされます。
+ また、コンポネントレベルでチャンクするためには、他からの参照がなくても `export` されていなければなりません。
+
+```plain text
+// チャンクされる
+export const AutoComplete = component$(() => {
+  const state = useStore<IState>({
+    searchInput: '',
+    searchResults: [],
+    selectedValue: '',
+  });
+
+  // $ がついているのでチャンクされる
+  useWatch$(async ({ track }) => {
+    // 省略
+  });
+
+  return (
+    <div>
+      <input
+        type="text"
+        // ここも $ がついているのでチャンクされる
+        onInput$={(ev) => (state.searchInput = (ev.target as HTMLInputElement).value)}
+      />
+      <SuggestionsListComponent state={state}></SuggestionsListComponent>
+    </div>
+  );
+});
+
+// チャンクされず AutoComplete にバンドルされる
+export const SuggestionsListComponent = (props: { state: IState }) => {
+  const searchResults = props.state.searchResults;
+  return searchResults?.length ? (
+    <ul>
+      {searchResults.map((suggestion) => {
+        return <li onClick$={() => (props.state.selectedValue = suggestion)}>{suggestion}</li>;
+      })}
+    </ul>
+  ) : (
+    <div class="no-results">
+      <em>No suggestions, you re on your own!</em>
+    </div>
+  );
+};
+
+```
+
+このようなルールを守れば、実装者は特に意識することなく、Qwik にチャンクを任せて、適切に Resumable な結果を得ることができます。
+
+### コンポネント境界と再レンダリング
+
+また、再レンダリングに関してですが、Qwik では再レンダリングが勝手に子に伝搬するということはありません。
+ 再レンダリングが伝搬するのは、`useStore` で生成されたステートが props で渡されており、その state に変更が加わったときとなっており、そのルールを満たしていなければ、親が再レンダリングされても子は勝手には再レンダリングされません。
+
+つまり、`$`メソッドは境界線を示しており、境界線を超えて状態を共有するには、`useStore` による、ステートの生成と受け渡しが必要。 裏を返せば、それがなければ入れ子構造をとっても、状態を共有することがない、と言いかえることが可能です。
+
+## まとめ
+
+以上が Qwik の基本的な概念である Resumable の説明になります。
+
+初期JSの(メインスレッドでの)ロードを行わず、イベントが発火したり再レンダリング必要な時点で初めて、JSのロードと実行を行うことで、ページのレンダリングコストを極限まで下げるという、面白い仕組みになっています。
+
+ここまでパフォーマンスを考慮しなければならないシーンがあるのかと問われると、正直少し微妙なところではありますが、最終的には [Cloudflare Workers and micro-frontends: made for one another](https://blog.cloudflare.com/better-micro-frontends/) で、「モジュールフェデレーションを考慮しなくて良い」というところに、つながるコンセプトになります。
+
+Hydration は無駄が多いという課題は、現在様々なフレームワークで共通の課題となっており、Qwik やあるいは Resumable のコンセプトが注目を浴びています。そのため、実際に Qwik を使用しなくとも、知識として頭の片隅に入れておく程度にはよいかと思います。
+
+[GitHubで編集を提案](https://github.com/aiji42/zenn-content/blob/main/articles/fafa354f79660d.md)
+
+### Discussion

@@ -1,0 +1,19 @@
+# New database
+
+filters:
+  and:
+    - note["base"] == link("New database.base")
+properties:
+  file.name:
+    displayName: あなた
+  いいか太郎、難しく考える必要はない、自分を少し成長させて Chairperson インタフェースを実装しなさい。:
+    displayName: いいか太郎、難しく考える必要はない、自分を少し成長させて Chairperson インタフェースを実装しなさい。
+  ：:
+    displayName: ：
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - いいか太郎、難しく考える必要はない、自分を少し成長させて Chairperson インタフェースを実装しなさい。
+      - ：

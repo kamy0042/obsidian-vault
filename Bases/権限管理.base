@@ -1,0 +1,22 @@
+# 権限管理
+
+filters:
+  and:
+    - file.hasTag("topic/技術/権限管理")
+properties:
+  file.name:
+    displayName: Name
+  Tags:
+    displayName: Tags
+  Created:
+    displayName: Created
+  URL:
+    displayName: URL
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - Tags
+      - Created
+      - URL

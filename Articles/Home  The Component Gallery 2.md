@@ -1,0 +1,118 @@
+---
+Created: 2024-10-08T23:42:00
+URL: https://component.gallery/
+Tags: [topic/デザインシステム/コンポーネント設計]
+---
+Designed to be a reference for anyone building component-based user interfaces, *The Component Gallery* is an up-to-date repository of interface components based on examples from the world of [design systems](https://component.gallery/design-systems).
+
+## Recently updated components
+
+- [Popover](https://component.gallery/components/popover/)[**45**](https://component.gallery/components/popover/)[ examplesAn element that pops up from another element over other content; it differs from a tooltip in that it is usually triggered via click instead of hover and can contain interactive elements.](https://component.gallery/components/popover/)
+![](https://component.gallery/static/3759e6f213ef4e2e1ccc80bb680656d0/Popover%20Icon..svg)
+- [Rating](https://component.gallery/components/rating/)[**17**](https://component.gallery/components/rating/)[ examplesRatings let users see and/or set a star rating for a product or other item.](https://component.gallery/components/rating/)
+![](https://component.gallery/static/c7e45ccfd61097a791c931c712c57e07/Rating%20icon..svg)
+- [Accordion](https://component.gallery/components/accordion/)[**101**](https://component.gallery/components/accordion/)[ examplesOther names: Arrow toggle, Collapse, Collapsible sections, Collapsible, Details, Disclosure, Expandable, Expander, ShowyHideyThingAn accordion is a vertical stack of interactive headings used to toggle the display of further information; each item can be 'collapsed' with just a short label visible or 'expanded' to show the full content.](https://component.gallery/components/accordion/)
+![](https://component.gallery/static/bdfdf35590a52ad9bfd77a20ae4a50f6/Accordion%20Icon..svg)
+- [Quote](https://component.gallery/components/quote/)[**14**](https://component.gallery/components/quote/)[ examplesOther names: Pull quote, Block quoteQuotes are used to display a quotation: either from a person or another outside source or to highlight a passage of the current document (a pull quote).](https://component.gallery/components/quote/)
+![](https://component.gallery/static/05ebf9771e93fa00d547a34233749c3e/Quote%20Icon..svg)
+- [Pagination](https://component.gallery/components/pagination/)[**58**](https://component.gallery/components/pagination/)[ examplesPagination is the process of splitting information over multiple pages instead of showing it all on a single page; also the name for the interface component used for navigating between these pages.](https://component.gallery/components/pagination/)
+![](https://component.gallery/static/4c27962c43716f6cc71b1e739075ff42/Pagination%20Icon..svg)
+- [Tabs](https://component.gallery/components/tabs/)[**84**](https://component.gallery/components/tabs/)[ examplesOther names: Tabbed interfaceTabbed interfaces are a way of navigating between multiple panels, reducing clutter and fitting more into a smaller space.](https://component.gallery/components/tabs/)
+![](https://component.gallery/static/200fa28dde94949fb4a89b7403a57e19/Tabs%20Icon..svg)
+- [Button](https://component.gallery/components/button/)[**135**](https://component.gallery/components/button/)[ examplesButtons trigger an action such as submitting a form or showing/hiding an interface component.](https://component.gallery/components/button/)
+![](https://component.gallery/static/6c328145b09763aaf5debda0c2dbf266/Button%20Icon..svg)
+- [Breadcrumbs](https://component.gallery/components/breadcrumbs/)[**50**](https://component.gallery/components/breadcrumbs/)[ examplesOther names: Breadcrumb trailA list of links showing the location of the current page in the navigational hierarchy.](https://component.gallery/components/breadcrumbs/)
+![](https://component.gallery/static/41dba3f3c67eecf535c39e35f0239025/Breadcrumb%20Icon..svg)
+
+[View all components](https://component.gallery/components)
+
+## Recently updated Design Systems
+
+- 
+![](https://component.gallery/static/aa24e45deca00520f09ab0f90029a5db/a9ca5/www.patternfly.org_..png)
+    ## [PatternFly](https://www.patternfly.org/)
+Red Hat
+[PatternFly on figma](https://www.figma.com/@patternfly)
+[PatternFly on github](https://github.com/patternfly)
+Tech
+    - React
+    - Sass
+Features
+    - Tone of voice
+    - Open source
+    - Usage guidelines
+- 
+![](https://component.gallery/static/3f24ad57ae7a7f2e6d35ad57f453c4ad/de105/20240916T121544_httpsdesignsystem.morningstar.com..jpg)
+    ## [Morningstar Design System](https://designsystem.morningstar.com/)
+[Morningstar Design System on storybook](https://designsystem.morningstar.com/sandbox/)
+Tech
+    - Vue
+Features
+    - Usage guidelines
+- [Cedar](https://cedar.rei.com/)
+Recreational Equipment, Inc.
+[Cedar on github](https://github.com/rei/rei-cedar)
+Tech
+    - Vue
+    - Sass
+    - CSS Modules
+Features
+    - Usage guidelines
+    - Code examples
+    - Open source
+- 
+![](https://component.gallery/static/7de9f043c6874d7c475a4c29def239e8/de105/20240906T160811_httpsheadlessui.com..jpg)
+    ## [Headless UI](https://headlessui.com/)
+Tailwind Labs
+[Headless UI on github](https://github.com/tailwindlabs/headlessui)
+Tech
+    - React
+    - Vue
+Features
+    - Code examples
+    - Accessibility
+    - Open source
+- 
+![](https://component.gallery/static/2dce7177d4582475fe5416c396c55789/de105/20240516T090131_httpsgestalt.pinterest.systemshome..jpg)
+    ## [Gestalt](https://gestalt.pinterest.systems/)
+Pinterest
+[Gestalt on github](https://github.com/pinterest/gestalt/)
+Tech
+    - React
+    - CSS
+Features
+    - Code examples
+    - Open source
+    - Usage guidelines
+- [Geist Design System](https://vercel.com/geist)
+Vercel
+Tech
+    - React
+Features
+    - Code examples
+- 
+![](https://component.gallery/static/0748e7881ec51c02e6fc9665af53b5d3/a9ca5/design.gitlab.com_..png)
+    ## [Pajamas](https://design.gitlab.com/)
+GitLab
+[Pajamas on figma](https://www.figma.com/file/qEddyqCrI7kPSBjGmwkZzQ/)
+[Pajamas on GitLab](https://design.gitlab.com/components/tree)
+[Pajamas on storybook](https://gitlab-org.gitlab.io/gitlab-ui/)
+Tech
+    - Vue
+Features
+    - Usage guidelines
+    - Code examples
+    - Open source
+- 
+![](https://component.gallery/static/0bfb95cc023e7c1083c4d4411cb0237f/de105/20240216T144406_httpsbaseweb.design..jpg)
+    ## [Base Web](https://baseweb.design/)
+Uber
+[Base Web on figma](https://www.figma.com/@uber)
+[Base Web on github](https://github.com/uber/baseweb)
+Tech
+    - React
+    - CSS-in-JS
+Features
+    - Code examples
+    - Usage guidelines
+    - Open source

@@ -1,0 +1,282 @@
+---
+Updated: 2021-01-13T00:55:00
+Created: 2021-01-13T00:55:00
+URL: https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#stale-while-revalidate
+Tags: [topic/技術/PWA]
+---
+# Stale-While-Revalidate ヘッダによるブラウザキャッシュの非同期更新
+
+# [**Intro**](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#intro)
+
+システムにおいてキャッシュの設計は永遠の課題であり、 Web のパフォーマンスにおいても非常に重要である。
+
+Web では、 HTTP ヘッダを用いてブラウザやプロキシにキャッシュの制御を指定する。
+
+Stale-While-Revalidate ヘッダは、このキャッシュ制御に選択肢を追加する新しい仕様である。
+
+このヘッダの概要と、本サイトへの適用を解説する。
+
+# [**Web におけるキャッシュ**](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#web-%E3%81%AB%E3%81%8A%E3%81%91%E3%82%8B%E3%82%AD%E3%83%A3%E3%83%83%E3%82%B7%E3%83%A5)
+
+# [キャッシュの種類](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#%E3%82%AD%E3%83%A3%E3%83%83%E3%82%B7%E3%83%A5%E3%81%AE%E7%A8%AE%E9%A1%9E)
+
+まず、ブラウザが持つ従来のキャッシュの機構について整理する。
+
+そもそも、キャッシュを行う意義は大きく二つある。
+
+- リソースの取得を高速化する
+- サーバへの負荷を減らす
+
+これまでは HTTP ヘッダを用いて、キャッシュを管理させる方法を用いてきた。
+
+Web における、キャッシュの指定には大きく二つの方式がある。
+
+- ブラウザはリクエストを発行せず、保持するキャッシュを使用する(`Cache-Control`, `Expires`)
+- ブラウザはリクエストを発行し、サーバにキャッシュの有効性を確認してから、キャッシュを使用する(`ETag`, `Last-Modified`)
+
+また、キャッシュは、「再利用」を行う目的でありながら、ある一定の範囲で「更新」を行いたいという、相反するコントロールが求められる。
+
+筆者の認識として、キャッシュ設計の最も難しい点は、ここである。
+
+これらは基本的/一般的な内容であり、キャッシュに関わるヘッダや機能は他にもある点、そしてブラウザは独自の判断でキャッシュを使う場合があることに注意されたい。
+
+キャッシュを行う側としてブラウザ以外に Proxy もあるが、話を簡単にするため、今回は言及しない。
+
+# [Cache-Control, Expires](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#cache-control-expires)
+
+`Cache-Control` ヘッダで `max-age` を指定するか、 `Expires` ヘッダで未来の時間を指定した場合、ブラウザはその期間内であればサーバに問い合わせることなくキャッシュを使用する。
+
+つまり、この指定によるキャッシュがヒットする場合、ネットワークパケットは一切発生せず、理論上は最速でリソースを取得できる。
+
+しかし、これらのヘッダに基づくキャッシュヒットはブラウザ内で完結してしまうため、期限が切れるまでサーバは介入することができない。
+
+例えば、長い期間を指定してキャッシュさせた JS にバグがあった場合も、サーバから修正したスクリプトを配信することができなくなる。
+
+かと言って、短い消極的な期間にしては、高頻度でリクエストが発生してキャッシュの効果が薄れる。
+
+そこで、現実的には期間を長く、推奨される最大値の *1 年* などを指定し、更新があったらそのリソースの URL を変更するという運用がよく行われる。
+
+例えば `production.min.js` を 1 年間ブラウザにキャッシュさせる。
+
+この JS を `index.html` に指定する際は、以下のようにバージョンを含める。
+
+```plain text
+<script src=production.min.js?ver=1></script>
+```
+
+これで `ver=1` を参照している間はキャッシュが使われる。
+
+もし JS が更新されたらバージョンを変えることで、 URL を以下のように変更する。
+
+```plain text
+<script src=production.min.js?ver=2></script>
+```
+
+ブラウザのキャッシュは基本的に URL 単位で行われるため、この URL を毎回変えてやれば、古いキャッシュが使われるのを避けることができる。
+
+あくまで URL を変えることが目的なので、実際にサーバ側でこの値をハンドルする必要は必ずしもない。バージョンの代わりにタイムスタンプやハッシュを使っても良い。
+
+ただし、この `<script>` を含む、 `index.html` 自体が長期間キャッシュされてしまうと、 `production.min.js` の URL も更新できない。
+
+したがって、 `index.html` 自体は長期間のキャッシュがしにくいという問題は残る。
+
+# [Etag, Last-Modified](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#etag-last-modified)
+
+HTTP には、 *Conditional GET* (条件付き GET) という仕組みがある。
+
+これは、「*既に保持しているキャッシュが今でも有効かどうか*」をサーバに問い合わせる方法である。
+
+具体的には、サーバは `ETag`, `Last-Modified` などのヘッダをレスポンスに付与することで、リソースに関する情報をサーバに伝える。
+
+# [**Stale-While-Revalidate**](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#stale-while-revalidate)
+
+ここまでの二つの仕組みは、下手に設定すると更新されない、弱気になるとキャッシュが効かないという、設計の難しさをはらむ。
+
+したがってヘッダのみを用いて、「*キャッシュは効かせたいが、なるべく新鮮なリソースを提供したい。*」などといった要望に対処するのが難しかった。
+
+そこで提案されたのが *Stale-While-Revalidate* (SwR)という `Cache-Control` の拡張である。
+
+簡単に言えば「*キャッシュから表示するが、裏で非同期にキャッシュを更新しておく*」という仕組みである。
+
+- [RFC 5861 - HTTP Cache-Control Extensions for Stale Content](https://tools.ietf.org/html/rfc5861)
+
+なお、現時点では Chrome のみに実装されており、 flag を有効にすることで使用できる。
+
+chrome://flags/#enable-stale-while-revalidate
+
+# [max-age](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#max-age)
+
+まず、従来の方法で以下のヘッダがあった場合を考える。
+
+```plain text
+Cache-Control: max-age=3600;
+```
+
+すると、 fetch したレスポンスは 3600s の間は *fresh* とみなされ、その期間はキャッシュヒットする。
+
+しかし、 3600s をすぎるとキャッシュは *stale* とみなされ破棄し、次のリクエストで fetch が走る。
+
+# [stale-while-revalidate](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#stale-while-revalidate-1)
+
+`Cache-Control` に `stale-while-revalidate` を指定する。
+
+```plain text
+Cache-Control: max-age=3600, stale-while-revalidate=360
+```
+
+すると、 fetch から 3600s 経過したキャッシュは *stale* となるが、そこから 360s は、その *stale* なキャッシュを引き続き使用する。
+
+しかし、一度 *stale* なキャッシュを使用したら、裏で非同期に fetch を行い、サーバにキャッシュの鮮度を問い合わせる(validate)。
+
+もしサーバから新しいリソースを fetch したなら、そこに付与された新しいヘッダにしたがってキャッシュを更新する。
+
+なんらかの理由で 360s の間に validate が完了しなければ、キャッシュを *true stale* とみなして破棄し、次のリクエストで fetch が走る。
+
+`stale-while-revalidate` の時間が過ぎれば必ず fetch が発生するということは、従来設定していた `max-age` = `max-age` + `stale-while-revalidate` の時間と設定すれば、従来との差異はキャッシュの新しさだけになる。
+
+したがって、この設定からであれば、導入はそこまで難しく無いと考えられる。
+
+# [stale-if-error](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#stale-if-error)
+
+仕様にはもう一つ、 `stale-if-error` という拡張もある。
+
+同じく `Cache-Control` に指定する。
+
+```plain text
+Cache-Control: max-age=3600, stale-if-error=360
+```
+
+すると、 3600s でキャッシュは *stale* になり、次のリクエストで fetch が走る。
+
+しかし、もしその fetch がサーバの 500 やネットワークエラーにより失敗した場合は、 360s 間は stale cache を使用しても良い。
+
+これにより、ブラウザのエラー画面が表示されるのを防ぐことができる。
+
+もちろん、上記二つは組み合わせて使うことができる。
+
+# [**DEMO**](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#demo)
+
+動作するデモを以下に用意した。
+
+- [https://labs.jxck.io/stale-while-revalidate/](https://labs.jxck.io/stale-while-revalidate/)
+
+執筆時点では、実装ブラウザは Chrome のみであり、フラグを有効にすることで使用できる。
+
+chrome://flags/#enable-stale-while-revalidate
+
+サーバは、アクセスの度に異なるシーケンス番号、タイムスタンプ、ランダムな文字列を返すようになっている。
+
+そして、レスポンスに以下のヘッダを追加しているため、アクセスを繰り返せば挙動が確認できるだろう。
+
+(Chrome はリロードではキャッシュを無視する場合があるため、画面に用意したリンクを踏むこと)
+
+```plain text
+Cache-Control: max-age=5, stale-while-revalidate=10, stale-if-error=15
+```
+
+以下にデモのキャプチャを用意した。 Chrome の dev tools とサーバ側のアクセスログを表示している。
+
+サーバへのアクセスが発生し表示が更新されているが、全てキャッシュがヒットしていることが分かるだろう。
+
+# [**SwR を用いたキャッシュ戦略の考察**](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#swr-%E3%82%92%E7%94%A8%E3%81%84%E3%81%9F%E3%82%AD%E3%83%A3%E3%83%83%E3%82%B7%E3%83%A5%E6%88%A6%E7%95%A5%E3%81%AE%E8%80%83%E5%AF%9F)
+
+この仕組みを用いたキャッシュ戦略について考察する。
+
+まず、 SwR を用いると何が変わるのかを確認するため、極端な設定例を用いて考察する。
+
+# [1 year fresh cache](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#1-year-fresh-cache)
+
+```plain text
+Cache-Control: max-age=31536000
+```
+
+この設定では、キャッシュは 1 年間 *fresh* となる。
+
+例えば、 `favicon.ico` や `jquery.min.js` などといった更新が少ない、もしくは更新が無い(ある場合はファイル名が変わる) といった場合に設定が可能になる。
+
+キャッシュが途中で消されない理想状態においては、そのブラウザからサーバへのリクエストは 1 年間無いことになる。
+
+ただし、取得されるリソースは常に最初に取得したものであり、最大で 1 年前のものとなる。
+
+# [1 year stale cache](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#1-year-stale-cache)
+
+```plain text
+Cache-Control: max-age=1, stale-while-revalidate=3153600
+```
+
+この設定は、キャッシュはすぐに *stale* となる。
+
+しかし、 1 年間はこの *stale cache* を使用することが許可されているため、次のリクエストはキャッシュヒットする。
+
+そして、その裏で *validate* として fetch が走る。もしレスポンスが同じヘッダを持てば、そこからまた 1 年キャッシュが *stale* になる。
+
+つまり、キャッシュは常に 1 度だけヒットし、最後にアクセスした直後の内容に更新されていることになる。
+
+`max-age` との最大の違いは、サーバへの負荷になるだろう。この場合 fetch が行われる *回数* 自体は、 `Cache-Control` が無かった状態と変わらない。 fetch のタイミングが少し後ろにずれるだけである。
+
+最初にキャッシュしてから 1 年間は、必ずキャッシュヒットするが、リソースの状態は最後にアクセスした時のもの、という状態になる。
+
+# [1 year fresh/stale cache](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#1-year-freshstale-cache)
+
+```plain text
+Cache-Control: max-age=15768000, stale-while-revalidate=15768000
+```
+
+両方を半年ずつ設定した場合、半年ずつ *fresh* / *stale* になる。
+
+この場合 `stale-while-revalidate` に *対応していないブラウザ* でも、半年はキャッシュが効く。
+
+まだ `stale-while-revalidate` の実装が行き渡らないうちは、こうした両方での指定も考慮すべきだろう。
+
+`max-age` の割合を、リソースのコンテンツ頻度などを元に考慮することで、サーバへの負荷とキャッシュの鮮度のバランスを取ることができる。
+
+# [**本サイトへの適用**](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#%E6%9C%AC%E3%82%B5%E3%82%A4%E3%83%88%E3%81%B8%E3%81%AE%E9%81%A9%E7%94%A8)
+
+# [現状](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#%E7%8F%BE%E7%8A%B6)
+
+本サイトでは、現状 `Cache-Control` は [WebFont](https://blog.jxck.io/entries/2016-03-14/web-font-noto-sans.html) 以外にはつけておらず、 ETag による Conditional GET でのキャッシュを利用している。
+
+これは、ブログの記事や、 JS/CSS などの *修正がいち早く反映されて欲しい* からである。
+
+全体のアクセスもまだまだ多くはなく、バージョンの付与による URL の変更は、あまり使いたくは無い。
+
+リクエストが頻発しても、もし実際にリソースの更新がないのであれば、 304 を返すだけで足りる。
+
+したがって、現状との飛躍が少ない状態で *リクエストを減らすため* のキャッシュは考慮になく、 *表示の最適化* のためのキャッシュを積極的に行いたい。
+
+毎回キャッシュはヒットするが、極力最新の状態というのが理想である。
+
+# [アクセスパターン](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3)
+
+そして、ブログは平均週一回程度の更新であるため、ユーザのアクセスは以下のパターンがある。
+
+- 更新された日に RSS などからアクセスし、多少うろついて帰る
+- 長いスパンを開けて、検索などからアクセスし、多少うろついて帰る
+
+現状、多くのサイトがキャッシュを設定しているため、ブラウザのローカルキャッシュは [2 日程度で消える](https://code.facebook.com/posts/964122680272229/web-performance-cache-efficiency-exercise/) と言われている。
+
+そのため、後者の長いスパンの中で、前回アクセス時のキャッシュの適用を期待するのは難しい。
+
+どちらかというと、その日のアクセス後の導線上でキャッシュが効き、かつ、アクセス中に筆者が修正を適用しても、ある程度の速さで反映されて欲しい。
+
+合わせて、筆者の設定ミスなどでブログが落ちていたとしても、その日のうちはキャッシュが代替表示として十分に機能すると考える。
+
+# [設定](https://blog.jxck.io/entries/2016-04-16/stale-while-revalidate.html#%E8%A8%AD%E5%AE%9A)
+
+結果、以下のように設定することとした。
+
+リソースの種類によって設定を変えることも考えたが、基本的にどのリソースでも更新が短期間に反映されて欲しいため、リソースによって差はない。
+
+- max-age=1sec : SwR 非対応ブラウザではキャッシュしない
+- SwR=10min : そのとき滞在しているセッションの中ではキャッシュを使用
+- SiE=1day : その日のうちは、エラーの代替表示として stale cache を利用
+
+```plain text
+Cache-Control: max-age=1, stale-while-revalidate=600, stale-if-error=864000
+```
+
+非常に短期のセッションでキャッシュを有効にする設定である。
+
+一方、長期のキャッシュは、どうしてもアクセスしてない期間に行われた更新を、バックグラウンドで反映したくなる。
+
+そうした場合は、 Service-Worker を使ったキャッシュ機構を適用するため、別途対応する。

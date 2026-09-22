@@ -1,0 +1,19 @@
+# New database
+
+filters:
+  and:
+    - note["base"] == link("New database.base")
+properties:
+  file.name:
+    displayName: Networking failures or instability.
+  Check for hardware errors in system logs.:
+    displayName: Check for hardware errors in system logs.
+  Fix hardware errors or run tests on different hardware.:
+    displayName: Fix hardware errors or run tests on different hardware.
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - Check for hardware errors in system logs.
+      - Fix hardware errors or run tests on different hardware.

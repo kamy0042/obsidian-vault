@@ -1,0 +1,22 @@
+# New database
+
+filters:
+  and:
+    - note["base"] == link("New database.base")
+properties:
+  file.name:
+    displayName: no throttling
+  387 → 263 ( – 96 ):
+    displayName: 387 → 263 ( – 96 )
+  4 → 3.8 ( – 0.2 ):
+    displayName: 4 → 3.8 ( – 0.2 )
+  290 → 273 ( – 17 ):
+    displayName: 290 → 273 ( – 17 )
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - 387 → 263 ( – 96 )
+      - 4 → 3.8 ( – 0.2 )
+      - 290 → 273 ( – 17 )

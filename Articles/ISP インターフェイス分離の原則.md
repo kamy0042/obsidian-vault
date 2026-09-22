@@ -1,0 +1,84 @@
+---
+Created: 2021-01-15T20:19:00
+URL: https://github.com/zakizaki-ri9/typescript-sandbox/tree/master/clean-architecture
+URL 1: ""
+Tags: [topic/技術/ソフトウェア設計]
+---
+CleanArchitecture本の咀嚼ディレクトリ
+
+## 概要
+
+- 静的型付言語の場合、インターフェイスが変更されると、それを実装してる具象クラスの再コンパイル・デプロイが必要となる
+- それを避けるには、インターフェイスを分割すると良い
+- [サンプルコード](https://github.com/zakizaki-ri9/typescript-sandbox/blob/master/clean-architecture/isp/src/main.ts)を例にすると...
+- `ProgrammingLanguage`に`build`関数を追加しても、影響あるのは`ProgrammingLanguage`を実装している具象クラスのみとなる
+- `RealLanguage`を実装している具象クラスには影響を及ぼさない
+
+## サンプルコード実行
+
+`# exec
+npx ts-node ./src/isp
+
+# result
+{
+  j: 'name: 日本語, country: 日本',
+  c: 'name: C#, kind: 静的プログラミング言語',
+  compile: true
+}`
+
+## 参考文献
+
+- [Gist - インターフェイス分離の原則](https://github.com/SunriseDigital/work-shop/wiki/%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%95%E3%82%A7%E3%82%A4%E3%82%B9%E5%88%86%E9%9B%A2%E3%81%AE%E5%8E%9F%E5%89%87)
+
+# [DIP: 依存関係逆転の原則](https://github.com/zakizaki-ri9/typescript-sandbox/blob/master/clean-architecture/src/dip)
+
+## 咀嚼内容
+
+- DIPが伝えたいこと
+- 具象ではなく抽象だけを参照しているもの
+
+### 序章
+
+- 柔軟なシステム＝抽象を参照しているもの
+- 柔軟ではないシステム＝具象を参照しているもの
+- 具象（モジュール）の定義
+- 本では、関数が実装されているものを指す
+- 適応範囲
+- すべてに適応するのは現実的ではない
+- String等、OSやプラットフォーム周りについては許容してもOK
+- 適応範囲は、システム内の変化しやすい具象要素
+- 今現在開発しているモジュール
+- 変更が入るモジュール
+
+### 安定した抽象
+
+- 優れたソフトウェア設計者は...
+- インターフェイスの変更を抑える
+- コーディングレベルでの説明
+- **変化しやすい具象クラスを参照しない。**
+- 抽象インタフェースを参照する
+- 言語関係なし
+- [**AbstractFactory**](https://github.com/zakizaki-ri9/typescript-sandbox/blob/master/clean-architecture/docs/abstractFactory.md)[パターン](https://github.com/zakizaki-ri9/typescript-sandbox/blob/master/clean-architecture/docs/abstractFactory.md)を用いるとよい
+- というか、それしかないらしい
+- **変化しやすい具象クラスを継承しない**
+- 静的型付言語の継承は協力かつ幻覚なもののため、十分に注意すること
+- *おそらく、意図しない動きをさせる危険性があるためと思われる*
+- **具象関数をオーバーライドしない**
+- オーバーライドしたい場合は、元の関数を抽象関数にして、パターン毎の実装をすべき
+- **変化しやすい具象を名指しで参照しない**
+- DIPの言い換え
+
+### Factory
+
+**安定した抽象**に従うと、具象オブジェクトを生成する際に特別な処理が必要。
+
+事実上、すべての言語において、オブジェクトの具象定義を含むソースコードの依存は避けられない。
+
+そのため、大半のオブジェクト指向言語では**AbstractFactory**を用いて、依存性を管理する。
+
+## 参考記事
+
+- [「依存性逆転の原則」の自分なりの解釈](http://at-grandpa.hatenablog.jp/entry/dip#%E5%85%B7%E4%BD%93%E4%BE%8B%E3%81%8B%E3%82%89%E7%B4%90%E8%A7%A3%E3%81%84%E3%81%A6%E3%81%84%E3%81%8F)
+- [よくわかるSOLID原則5: D（依存性逆転の原則）](https://note.com/erukiti/n/n913e571e8207)
+- [Railsで学ぶSOLID（5）依存関係逆転の原則（翻訳）](https://techracho.bpsinc.jp/hachi8833/2019_05_09/62314)
+- [依存関係逆転の原則の重要性について](https://medium.com/eureka-engineering/go-dependency-inversion-principle-8ffaf7854a55)

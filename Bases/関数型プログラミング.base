@@ -1,0 +1,25 @@
+# 関数型プログラミング
+
+filters:
+  and:
+    - file.hasTag("topic/技術/関数型プログラミング")
+properties:
+  file.name:
+    displayName: Name
+  Tags:
+    displayName: Tags
+  プロパティ:
+    displayName: プロパティ
+  Created:
+    displayName: Created
+  URL:
+    displayName: URL
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - Tags
+      - プロパティ
+      - Created
+      - URL

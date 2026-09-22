@@ -1,0 +1,49 @@
+filters:
+  and:
+    - or:
+        - file.hasTag("topic/デザインシステム")
+        - file.hasTag("topic/デザインシステム/デザイントークン")
+        - file.hasTag("topic/デザインシステム/デザイントークン/DTCG")
+        - file.hasTag("topic/デザインシステム/コンポーネント設計")
+        - file.hasTag("topic/デザインシステム/配信基盤")
+        - file.hasTag("topic/デザインシステム/ドキュメント")
+        - file.hasTag("topic/デザインシステム/ガバナンス")
+        - file.hasTag("topic/デザインシステム/連合型DS")
+        - file.hasTag("topic/デザインシステム/ROI")
+properties:
+  file.name:
+    displayName: 名前
+  タグ:
+    displayName: タグ
+  作成日時:
+    displayName: 作成日時
+  Tags:
+    displayName: Tags
+  URL:
+    displayName: URL
+views:
+  - type: cards
+    name: カードビュー
+    order:
+      - file.name
+      - tags
+    cardSize: 800
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - tags
+      - 作成日時
+      - URL
+    sort:
+      - property: タグ
+        direction: ASC
+      - property: 作成日時
+        direction: DESC
+    columnSize:
+      file.name: 560
+      note.tags: 456
+  - type: cards
+    name: ビュー
+    cardSize: 800
+    imageAspectRatio: 1.15

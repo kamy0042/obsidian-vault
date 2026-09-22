@@ -1,0 +1,126 @@
+---
+タグ: []
+作成日時: 2024-07-17T16:50:00
+URL: https://shuaruta.github.io/ARIA-Barriers/2023/12/22/aria-live.html
+Tags: [topic/アクセシビリティ/WAI-ARIA]
+---
+この記事は[「アクセシビリティ Advent Calendar 2023」](https://adventar.org/calendars/8584) 22日目の記事です。[24motz](https://twitter.com/24motz) が執筆しました。
+
+### お願い
+
+このページは意図的に不適切に WAI-ARIA （Accessible Rich Internet Applications）技術を使って実装しています。 詳細は後述します。
+
+閲覧に支障がある場合は GitHub で[この記事のMarkdown版](https://github.com/shuaruta/ARIA-Barriers/blob/main/_posts/2023-12-22-aria-live.md)をご利用ください。
+
+### ARIA-Barriers とは
+
+この記事を書いている [株式会社シュアルタ](https://www.shuaruta.com/) 代表の [nishimotz](https://d.nishimotz.com/aboutme) は、オープンソースのスクリーンリーダー [NVDA](https://www.nvaccess.org/) の [日本語版](https://www.nvda.jp/) を開発しています。
+
+シュアルタは現在 [ACT Laboratory](https://actlab.org/) (Accessible Tools Laboratory) と定期的な技術交流を行っています。 ACT Laboratory はプログラミングを学ぶ視覚障害者の集まりです。高校生から20代までの若いメンバーが集まって、ソフトウェアを開発・配布しています。
+
+今回、シュアルタが ACT Laboratory メンバーの協力を得て、ウェブアクセシビリティ実装の失敗事例を発信するために、このサイトを作成しました。
+
+### いま気になっていること
+
+nishimotz は今年、[ウェブアクセシビリティ基盤委員会(WAIC)](https://waic.jp/)実装ワーキンググループの主査となり、「どのスクリーンリーダーにも対応できるウェブコンテンツ」を作るための情報整備に取り組みました。
+
+ウェブサイトの制作案件にアクセシビリティチームとして関わったり、アクセシビリティ検証者を支援する教材作りをお手伝いする機会もいただきました。
+
+この分野への関心の高まりをますます感じている一方、「間違って WAI-ARIA を使っているウェブサイトやコンポーネント」が増えてきた、と気づきました。
+
+MDN [WAI-ARIAの基本](https://developer.mozilla.org/ja/docs/Learn/Accessibility/WAI-ARIA_basics) にも書かれているように、WAI-ARIA は「必要な時だけ使ってください！」。
+
+では「いつ必要か」をどうやって知ればいいでしょうか？
+
+「アクセシビリティ対応を求められたので、どういう効果があるか確認していないけど WAI-ARIA を使った」ということが、あるかもしれません。
+
+WAI-ARIA を不適切に使うと、スクリーンリーダーのユーザーにとって、恐ろしく使いにくいコンテンツになることがあります。
+
+「ためになるWAI-ARIA」と「ダメになるWAI-ARIA」の見極めは難しいです。
+
+不適切に WAI-ARIA を使うコンテンツが増えると「ARIA に対応できていないスクリーンリーダーの方が使いやすい」ということになりかねません。 技術の開発と啓発に関わる立場としては、とても困ったことです。
+
+### このサイトでやりたいこと
+
+このサイトでは「ダメになるWAI-ARIA」を具体的に紹介したいと思っています。
+
+例えば NVDA ユーザーから、とあるウェブサイトに関する問題のご報告をいただいたのですが、Windows用の別のスクリーンリーダーであるナレーターでは再現しない、ということがありました。
+
+スクリーンリーダーの不具合として報告されたのですが、どうやらウェブサイトの WAI-ARIA の使い方に問題があると見立てました。 ですが、昨今のウェブサイトは、単純そうに見えるものであっても、複雑にビルドされていることが多く、問題の原因を特定するのは容易ではありません。
+
+WAI-ARIA をこう使うとこんなひどいことになります、という実例をなるべくシンプルに作って説明しないと、開発者の方には伝わらないのではないか。
+
+ACT Laboratory メンバーとこのような話をしていたら、「そういう実装にはよく遭遇しているので、パターン化できそう」「では紹介サイトを作ってみようか」ということになりました。
+
+私が執筆するこの記事が第1号ですが、これから私以外の執筆者の記事も公開していく予定です。
+
+### ライブリージョンの目的
+
+2022年のアドベントカレンダーで、[スクリーンリーダーはどうやってライブリージョンを読み上げるのか](https://qiita.com/24motz/items/a992a8d3d4b65452b7eb)という記事を書いたきり、説明が途中で終わっているのですが、ライブリージョンの概要はそちらをご参照ください。
+
+WCAG 2.1 の達成基準 4.1.3「ステータスメッセージ」は、 コンテンツの変化がユーザーに伝わることを求めています。
+
+- [達成基準 4.1.3: ステータスメッセージを理解する](https://waic.jp/translations/WCAG21/Understanding/status-messages.html)
+
+実際に動くサンプルは下記にあります。
+
+- [freee Accessibility Training ステータスメッセージ](https://freee.github.io/a11y-training/status-message/)
+
+### このページの説明
+
+先ほどの「WCAG 2.1 解説書」には「失敗例」として
+
+- Using role=”alert” or aria-live=”assertive” on content which is not important and time-sensitive
+
+と（さらっと）書かれています。
+
+これを「なるほど失敗例だな」と感じていただくために作ったのがこのページです。
+
+このページでは、`aria-live="assertive"` 属性を使用して、10秒ごとにコンテンツを更新する広告を実装しています。
+
+視覚的には、このサイトは閲覧開始から10秒経過すると、一番下に黄色いバーが表示されます。このバーは10秒ごとに 「今すぐダウンロード！あなたのPCを高速化！」 「限定オファー！無料で豪華ギフトをゲット！」 を交互に表示します。
+
+スクリーンリーダーを起動すると、10秒ごとに、広告の内容が読み上げられます。
+
+ユーザーがこのサイトを上から順番に読み進めていると、サイトの内容にときどき広告が割り込んで邪魔します。困りますね。
+
+```plain text
+<div id="advertisement" aria-live="assertive">
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    const messages = [
+        '今すぐダウンロード！あなたのPCを高速化！',
+        '限定オファー！無料で豪華ギフトをゲット！'
+    ];
+    let index = 0;
+    const div = document.querySelector('#advertisement');
+
+    setInterval(() => {
+        div.textContent = messages[index];
+        index = (index + 1) % messages.length;
+    }, 10000);
+});
+</script>
+
+```
+
+### カルーセル
+
+「aria-live がうるさい」というのは、カルーセルの実装の失敗事例としてよく聞かされます。
+
+お手本になると思われる ARIA Authoring Practices Guide (APG) のカルーセルの実装例を見てみます。
+
+- [Auto-Rotating Image Carousel Example with Buttons for Slide Control](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/examples/carousel-1-prev-next/)
+
+カルーセルスライドのコンテンツは以下のように実装されています。
+
+- 自動回転がオフの場合は、スライドはライブリージョンになります。「次のスライド」「前のスライド」をクリックすると、コンテンツの変化を読み上げます。これは操作に対するフィードバックとして必要です。
+- 自動回転がオンの場合は、スライドはライブリージョンになりません。スライドのコンテンツの変化は読み上げません。これにより、他の内容の読み上げを邪魔しません。
+
+### おわりに
+
+ひどいページを閲覧させてしまい、申し訳ありませんでした。
+
+今後も、できるだけシンプルな「ひどいページ」を作って、アクセシビリティの失敗例を紹介していきますので、ご期待ください。

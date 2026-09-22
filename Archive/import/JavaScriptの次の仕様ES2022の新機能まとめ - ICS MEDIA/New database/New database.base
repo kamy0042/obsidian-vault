@@ -1,0 +1,25 @@
+# New database
+
+filters:
+  and:
+    - note["base"] == link("New database.base")
+properties:
+  file.name:
+    displayName: ◯ 92
+  ◯ 90:
+    displayName: ◯ 90
+  ◯ 15.4:
+    displayName: ◯ 15.4
+  .at():
+    displayName: .at()
+  ◯ 16.6:
+    displayName: ◯ 16.6
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - ◯ 90
+      - ◯ 15.4
+      - .at()
+      - ◯ 16.6

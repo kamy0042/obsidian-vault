@@ -1,0 +1,23 @@
+filters:
+  and:
+    - file.hasTag("topic/技術/ソフトウェア設計")
+properties:
+  file.name:
+    displayName: Name
+  Tags:
+    displayName: Tags
+  Created:
+    displayName: Created
+  URL:
+    displayName: URL
+  URL 1:
+    displayName: URL 1
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - Tags
+      - Created
+      - URL
+      - URL 1

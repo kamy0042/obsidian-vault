@@ -1,0 +1,19 @@
+# New database
+
+filters:
+  and:
+    - note["base"] == link("New database.base")
+properties:
+  file.name:
+    displayName: コンストラクタインジェクション
+  __construct():
+    displayName: __construct()
+  __invoke():
+    displayName: __invoke()
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - __construct()
+      - __invoke()

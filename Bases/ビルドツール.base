@@ -1,0 +1,25 @@
+# ビルドツール
+
+filters:
+  and:
+    - file.hasTag("topic/技術/ビルドツール")
+properties:
+  file.name:
+    displayName: Name
+  URL:
+    displayName: URL
+  Tags:
+    displayName: Tags
+  Updated:
+    displayName: Updated
+  Created:
+    displayName: Created
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - URL
+      - Tags
+      - Updated
+      - Created

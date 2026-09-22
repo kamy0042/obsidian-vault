@@ -1,0 +1,25 @@
+# React - Nextjs
+
+filters:
+  and:
+    - file.hasTag("topic/技術/React/Nextjs")
+properties:
+  file.name:
+    displayName: Name
+  URL:
+    displayName: URL
+  Created:
+    displayName: Created
+  Tags:
+    displayName: Tags
+  Updated:
+    displayName: Updated
+views:
+  - type: table
+    name: Table View
+    order:
+      - file.name
+      - URL
+      - Created
+      - Tags
+      - Updated
