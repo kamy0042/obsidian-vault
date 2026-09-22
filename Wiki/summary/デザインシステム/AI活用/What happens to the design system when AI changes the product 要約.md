@@ -3,9 +3,9 @@ type: summary
 updated: 2026-07-26
 ---
 
-# What happens to the design system when AI changes the product? 要約
+# What happens to the design system when AI changes the product 要約
 
-ソース: [[What happens to the design system when AI changes the product?]]
+ソース: [[What happens to the design system when AI changes the product]]
 
 「AI でコンポーネント生成を速くする」という効率化の議論を超えて、AI が製品そのものを変えたときデザインシステムはどうなるかを問うエンタープライズ UX デザイナーの論考。
 既存のデザインシステムは「インタラクションは直線的」「ユーザーはオペレーター」という前提の上に築かれているが、AI はユーザーを意思決定者（レビューして承認・修正・拒否する側）に変えつつあり、この世界観が時代遅れになりつつある。

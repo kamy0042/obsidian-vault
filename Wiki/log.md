@@ -348,3 +348,8 @@ touched: [[Open Knowledge Format]] (新規), [[Model Context Protocol]] (関連�
 
 touched: [[Figma Dev Modeベータ版の案内 - Twitter]] (改名), [[デザインシステムのはじめかた―構築の5サイクル - CreatorZine]] (改名), [[デザインシステムのはじめかた―構築の5サイクル - CreatorZine 要約]] (改名)
 結果: UTF-8で255バイトを超えるファイル名を解消し、要約目次と参照リンクを更新
+
+## [2026-09-22] maintenance | Android非対応ファイル名の修正
+
+touched: [[What happens to the design system when AI changes the product]] (改名), [[What happens to the design system when AI changes the product 要約]] (改名)
+結果: ファイル名から疑問符を除去し、要約目次と参照リンクを更新

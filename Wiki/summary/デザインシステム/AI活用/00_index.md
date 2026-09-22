@@ -36,7 +36,7 @@ updated: 2026-08-03
 - [[Storybook の情報を抜き出して MCP サーバにしてみる 要約|Storybook を MCP サーバ化（LayerX）]] — index.json と react-docgen で List/Get 型の2ツール構成。既存資産が AI 時代の生産性ツールになる
 - [[StorybookをAIと連携させるためのベストプラクティス  Storybookドキュメント 要約|Storybook × AI 連携ベストプラクティス]] — 1 Story 1 概念、JSDoc で「なぜ」を書く、manifest タグで情報量を調整
 - [[Storybook公式MCPの解説とその先 - Design Systems with Agentsの提案について - 要約|Storybook 公式 MCP の解説とその先]] — MCP Addon で Story 生成精度が向上。「AI がデザインシステムを守らない」問題への布石
-- [[What happens to the design system when AI changes the product? 要約|AI がプロダクトを変えるとき DS はどうなるか]] — ユーザーはオペレーターから意思決定者へ。DS は制約の集合＝憲法に近づく
+- [[What happens to the design system when AI changes the product 要約|AI がプロダクトを変えるとき DS はどうなるか]] — ユーザーはオペレーターから意思決定者へ。DS は制約の集合＝憲法に近づく
 - [[Your design system’s real job in 2026 is catching the AI. 要約|DSの仕事はAIを捕まえること]] — 成果物はコンポーネントから「チェック（evals）」へ。レジストリ参照でも準拠率~95%が上限、機械的チェック+LLM-as-a-judge を CI で回す
 - [[デザインシステム MFUI を MCP サーバー化して社内に提供した話 要約|マネーフォワード MFUI の MCP 化]] — ソースコード直接返却の素朴な3ツール構成、クローン&ビルド配布でコントリビュート促進
 - [[デザインツールは設計図を作る場所ではなくなった 要約|デザインツールは設計図を作る場所ではなくなった]] — 実装先行の「粘土造形化」。設計は AI、意匠は人間。デザインは AI へのコンテキスト提供になる
