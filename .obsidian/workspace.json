@@ -188,11 +188,13 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "343000f48bf2e7d5",
+  "active": "8579a3a82a865fe4",
   "lastOpenFiles": [
-    "Articles/Beyond the Design System-Designing a Shared Enterprise Ecosystem.md",
     "Articles/AIネイティブを目指した「これまで」と「これから」｜agu  relay（リレイ）.md",
+    "Wiki/log.md",
     "Articles/「何か質問や意見ありますか」の後の無言対策.md",
+    "Clippings/Stop using OKLCH lightness for your color scale.md",
+    "Articles/Beyond the Design System-Designing a Shared Enterprise Ecosystem.md",
     "Wiki/entity/relay Design System.md",
     "Wiki/summary/デザインシステム/戦略・ガバナンス/Beyond the Design System-Designing a Shared Enterprise Ecosystem 要約.md",
     "Wiki/summary/デザインシステム/AI活用/AIネイティブを目指した「これまで」と「これから」｜agu  relay（リレイ） 要約.md",
@@ -214,8 +216,6 @@
     "Articles/Reusable Does Not Mean Good The Hidden Trap of Design System Components.md",
     "Articles/From Design Thinking to Design Systems How UX Principles Become Scalable Products.md",
     "Articles/Your Component Library Is Not a Design System.md",
-    "Articles/The Component Library Illusion Why You Don’t Actually Have a Design System.md",
-    "Articles/Design systems were already broken.md",
     "Wiki/summary/組織/DesignOps",
     "Wiki/summary/アクセシビリティ",
     "Wiki/summary/組織/ハンドオフ",
