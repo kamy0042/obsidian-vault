@@ -1,6 +1,6 @@
 ---
 type: concept
-updated: 2026-08-03
+updated: 2026-09-22
 ---
 
 # AI時代のデザインシステム
@@ -53,6 +53,14 @@ updated: 2026-08-03
 - props は命名の統制が構造的に不可能（88コンポーネント・200超 props で type/variant、outline/outlined/bordered、sm/small/s 等10件のドリフト実測）であり、機械可読な prop map を読むエージェントが唯一の橋になる（出典: [[Building language for design systems]]）
 - 振る舞いの JSON 契約「Component Contracts」: Aparat（イラン最大の動画基盤）は視覚を除外して props・状態機械・トリガー・a11y を JSON 契約化し、エージェントマニフェスト同梱で AI ハンドオフに供給。仕様の曖昧さ70%減、スループット 0.8→9.6 SP/D、ボトルネックが開発からデザイン側へ反転した。「Figma Make と素の Claude の品質差はモデルではなくコンテキストの差」（出典: [[Component Contracts The missing piece for AI-era Design System handoff]]）
 - ビジョンとしての agentic DS: 受動的な「ファイリングキャビネット」から、自然言語の意図記述に文脈を理解した提案を返し、フィードバックで学習し続ける存在へ。DS の価値は元々コンポーネント数ではなく蓄積された知識と決定にあった、という史観（出典: [[Design Systems Are About to Start Thinking]]）
+
+## 構造化メタデータと決定的生成
+
+- AI向けコンポーネントメタデータでは、`usage`・`aiHints`・`variants`・`composition`・`behavior` を**判断層**、`props`・`accessibility`・`examples` を参照層として分ける。ヘッダーで候補を絞り必要な本文だけ読む段階的探索にすると、判断の根拠を保ったままコンテキスト量を抑えられる（出典: [[Design system documentation as structured metadata]]）
+- [[Nathan Curtis]] は良い契約の条件を well-typed / normalized / platform-independent / verifiable / deterministic / efficient / evolvable と整理する。同じ決定を一度だけ記述し、コードの80〜90%を決定的に生成した後の不足部分へAI推論を限定する。契約内容とスキーマは別々に版管理し、スキーマ変更はADRで理由と影響を残す（割合は著者の実務上の主張。出典: [[Component Contracts and Schemas]]）
+- 実装構成の一例は、正確な値を返すトークンMCP、実際の構造を返すFigma MCP、両者にない判断規則を持つ短いプロジェクトプレイブックの3層。生成後も同じデータ源で未使用・非推奨トークンを監査し、生成・批評・修正を閉ループ化する（出典: [[I Gave Claude Code My Design System. Here’s the Exact Setup.]]）
+- 別管理のFigma・文書・コードをAIで同期するのでなく、稼働コードを視覚的キャンバスとして共同編集し、機械可読文書も同じパッケージで配る「コード単一正本」論もある。これは後述の分散した契約を同期する立場と対立する提案であり、現時点では著者のViraUI構想を含む立場表明である（出典: [[Design Systems 2.0 The source of truth is the code.]]）
+- zeroheight 2026調査では回答者の56%がAIを利用・実験中で、期待はドキュメント生成57%に対しデザイン生成13%、懸念はデザイン生成61%だった。実務家の需要は判断代行より、根拠探索・変更差分・過去決定との衝突の可視化に寄っている（147人の自己申告調査。出典: [[Design systems were already broken]]）
 
 ## 2026年の現在地 — インフラは来たが、チームが来ていない
 
@@ -109,6 +117,15 @@ updated: 2026-08-03
 - 市場の動き: 2026-03 に OpenAI が evals ツール promptfoo を買収、Google Labs は機械可読仕様 DESIGN.md を OSS 公開（出典: [[Your design system’s real job in 2026 is catching the AI.]]）
 - ブランド面でも agentic AI を CI/CD に組み込む「デプロイ前ブランド監査」が構想され、漸進的なブランドドリフトを機械的に検出する（出典: [[Design Systems as Brand Ops Tokens, AI and Stopping Brand Drift]]。ブランド運用論は [[ブランドとデザインシステム]]）
 
+## 国内実践 — relay Design System の品質責任分界
+
+[[relay Design System]] は狩野モデルを使い、AIが守る品質と人が作る品質を同じ運用モデルへ接続した（以下すべて出典: [[AIネイティブを目指した「これまで」と「これから」｜agu  relay（リレイ）]]）。
+
+- DESIGN.mdの**譲れない原則**を当たり前品質、**迷ったときの判断基準**を一元的品質として明記する。前者はハードコード禁止やアクセシビリティ等をhooksで決定的に遮断し100点を目指す。後者は固定の意図レベル課題を解かせるevalsで、コンポーネント選定と表現の質を採点・改善する
+- 品質区分は固定しない。運用中に指摘が多い一元的品質は、チームにとって当たり前になったと判断して譲れない原則へ移し、検査の置き場所もevalsからhooksへ移す。**品質の成熟を、人の判断から機械的保証へ引き渡す**モデルである
+- コードリポジトリを正本、Figmaを探索と最終調整の場とし、フレームワーク非依存CSS、MCPの「目次→詳細」、接続時instructions、初回`get_setup`でAIが正しい入口を通るようにする
+- AIネイティブ化の目的は自動運転や人員削減ではなく、当たり前品質を仕組みに任せて、人がユーザーの声・仮説・次の魅力的品質へ時間を使うこと。魅力が反復され当たり前になれば再び言語化し、システムへ移す
+
 ## 現場の温度感 — Adobe Spectrum
 
 - Spectrum 2 を率いる Shawn Cheris の展望: チャットのような馴染みある形式の先に「**タスク実行時に必要なインターフェイスがリアルタイムで生成される**」動的 UI の可能性がある一方、「AI のための理想的なインターフェイスはまだ発明されていない。仮に発明されていても、人がまだついて行けていない」——理解の醸成と共通言語の形成には時間がかかる（出典: [[10年ぶりのデザイン言語刷新に乗り出すアドビ　担当者に聞く「Spectrum 2」誕生の経緯と目的｜Real Sound｜リアルサウンド テック]]）
@@ -118,8 +135,8 @@ updated: 2026-08-03
 
 ## 登場するソース
 
-[[10年ぶりのデザイン言語刷新に乗り出すアドビ　担当者に聞く「Spectrum 2」誕生の経緯と目的｜Real Sound｜リアルサウンド テック]], [[AI and Design Systems  Brad Frost]], [[Building a Design System for the AI Era]], [[Building a Design System That Scales Creating Consistency for Humans and AI]], [[Building language for design systems]], [[Component Contracts The missing piece for AI-era Design System handoff]], [[Design System Wisdom 2023]], [[Design Systems Are About to Start Thinking]], [[Design Systems Are No Longer Component Libraries. They Are Strategic Business Infrastructure.]], [[Design Systems Are Not Just for Products Anymore]], [[Design Systems as Brand Ops Tokens, AI and Stopping Brand Drift]], [[Design Systems as Machine-Readable Product Infrastructure]], [[Design Systems Beyond Components]], [[Design Systems in 2026 Turn Your System into a Claude Skill]], [[Design Systems in April 2026 The Infrastructure Is Here. Most Teams Still Aren’t.]], [[Design systems are contracts, not libraries]], [[Garth Braithwaite on Design Tokens, Governance, and Scaling Spectrum at Adobe  Knapsack]], [[How I turned a static design system into an AI teammate]], [[How the errors are guiding the Harness Design System]], [[How to Build an Agentic Design System People (and Agents) Will Actually Use (Part 1)]], [[Meta's Astryx Returns to GitHub Trending JSON Manifest Stops AI Agents From Hallucinating UI Props]], [[The Aspirational Bloat Trap Why Your Design System is Failing]], [[The Token Structure That Survives Five Products (Google Uses It Too)]], [[Your design system has opinions. They’re just not being enforced]], [[Your design system’s real job in 2026 is catching the AI.]], [[「専任ゼロ」でも育て続ける、Gaudiyのデザインシステム運用｜TORAJIRO]], [[デザインシステムはボトルネックではない  アンドレアス・ヨハンソン著  2026年2月  デザインシステムズ・コレクティブ]], [[デザインシステム疲れからの再出発：持続可能な運用への実践的アプローチ｜ishigakijunichi]], [[翻訳記事：デザインシステムの破られた約束；なぜルールに従っても優れた製品が得られないのに従うのか｜Nobuya Sato]]
+[[10年ぶりのデザイン言語刷新に乗り出すアドビ　担当者に聞く「Spectrum 2」誕生の経緯と目的｜Real Sound｜リアルサウンド テック]], [[AI and Design Systems  Brad Frost]], [[AIネイティブを目指した「これまで」と「これから」｜agu  relay（リレイ）]], [[Building a Design System for the AI Era]], [[Building a Design System That Scales Creating Consistency for Humans and AI]], [[Building language for design systems]], [[Component Contracts and Schemas]], [[Component Contracts The missing piece for AI-era Design System handoff]], [[Design system documentation as structured metadata]], [[Design Systems 2.0 The source of truth is the code.]], [[Design System Wisdom 2023]], [[Design Systems Are About to Start Thinking]], [[Design Systems Are No Longer Component Libraries. They Are Strategic Business Infrastructure.]], [[Design Systems Are Not Just for Products Anymore]], [[Design Systems as Brand Ops Tokens, AI and Stopping Brand Drift]], [[Design Systems as Machine-Readable Product Infrastructure]], [[Design Systems Beyond Components]], [[Design Systems in 2026 Turn Your System into a Claude Skill]], [[Design Systems in April 2026 The Infrastructure Is Here. Most Teams Still Aren’t.]], [[Design systems are contracts, not libraries]], [[Design systems were already broken]], [[Garth Braithwaite on Design Tokens, Governance, and Scaling Spectrum at Adobe  Knapsack]], [[How I turned a static design system into an AI teammate]], [[How the errors are guiding the Harness Design System]], [[How to Build an Agentic Design System People (and Agents) Will Actually Use (Part 1)]], [[I Gave Claude Code My Design System. Here’s the Exact Setup.]], [[Meta's Astryx Returns to GitHub Trending JSON Manifest Stops AI Agents From Hallucinating UI Props]], [[The Aspirational Bloat Trap Why Your Design System is Failing]], [[The Token Structure That Survives Five Products (Google Uses It Too)]], [[Your design system has opinions. They’re just not being enforced]], [[Your design system’s real job in 2026 is catching the AI.]], [[「専任ゼロ」でも育て続ける、Gaudiyのデザインシステム運用｜TORAJIRO]], [[デザインシステムはボトルネックではない  アンドレアス・ヨハンソン著  2026年2月  デザインシステムズ・コレクティブ]], [[デザインシステム疲れからの再出発：持続可能な運用への実践的アプローチ｜ishigakijunichi]], [[翻訳記事：デザインシステムの破られた約束；なぜルールに従っても優れた製品が得られないのに従うのか｜Nobuya Sato]]
 
 ## 関連ページ
 
-[[デザインシステム批判論]], [[デザインシステムの強制と例外]], [[デザインシステムと組織構造]], [[宣言的デザインシステム]], [[デザイントークンの命名]], [[セマンティックトークン]], [[DTCG]], [[デザインシステムとアクセシビリティ]], [[デザインシステムのドキュメンテーション]], [[ブランドとデザインシステム]], [[デザインエンジニアリング]], [[Itai Vonshak]], [[Adobe Spectrum]], [[Astryx]], [[Atlassian Design System]], [[Model Context Protocol]], [[Murphy Trueman]]
+[[デザインシステム批判論]], [[デザインシステムの強制と例外]], [[デザインシステムと組織構造]], [[宣言的デザインシステム]], [[デザイントークンの命名]], [[セマンティックトークン]], [[DTCG]], [[デザインシステムとアクセシビリティ]], [[デザインシステムのドキュメンテーション]], [[ブランドとデザインシステム]], [[デザインエンジニアリング]], [[Itai Vonshak]], [[Adobe Spectrum]], [[Astryx]], [[Atlassian Design System]], [[relay Design System]], [[Model Context Protocol]], [[Murphy Trueman]]

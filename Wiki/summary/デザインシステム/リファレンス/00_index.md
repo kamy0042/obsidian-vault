@@ -1,12 +1,13 @@
 ---
 type: summary
-updated: 2026-07-27
+updated: 2026-09-22
 ---
 
 # リファレンス 目次
 
-`Wiki/summary/デザインシステム/リファレンス/` の要約ページ目次。要約ページの増減に合わせて機械的に再生成する。現在 18件。
+`Wiki/summary/デザインシステム/リファレンス/` の要約ページ目次。要約ページの増減に合わせて機械的に再生成する。現在 19件。
 
+- [[8 Underrated Design Systems We Keep Coming Back to for Inspiration 要約|参考になる8つの過小評価されたDS]] — Blade・Seeds・Gestalt等を、部品でなく判断・文脈・例外の設計から読む
 - [[Adobe製デザインシステム「React Spectrum」がすごいので紹介したい - Qiita 要約|React Spectrum 紹介]] — react-aria / react-stately のロジック分離設計の価値
 - [[Atlassina Design System 要約|Atlassian Design System]] — 職種別導線と Rovo/AI パターンを備えた公式ハブ
 - [[Carbon Design System 要約|Carbon Design System]] — IBM 製 OSS。多フレームワーク対応ライブラリと Figma キット

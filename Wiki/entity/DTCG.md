@@ -2,7 +2,7 @@
 type: entity
 entity-type: spec
 aliases: [Design Tokens Community Group, W3Cデザイントークン標準, Design Token Format Modules]
-updated: 2026-07-27
+updated: 2026-09-22
 ---
 
 # DTCG
@@ -44,7 +44,7 @@ W3C の Design Tokens Community Group。デザイントークンをツール間�
 ## 意義と限界
 
 - 標準に沿えば中央のプラットフォーム非依存リポジトリからプロダクト群全体へ一貫した伝播が効く、というのが推進側の主張（出典: [[自信を持ってトークンを設計しましょう。W3Cデザイントークン標準が優れている理由…  ルーカス・オッパーマン著  2026年1月  UX Collective]]※冒頭のみの部分クリップ）
-- ただし**仕様が標準化するのは表現（文法）であって義務（どのトークンが存在すべきか）ではない**。「仕様は文法を、契約は各ブランドが埋めるべき語彙リストを与える」——マルチブランド運用には仕様と別に契約層が要る（Kevin Muldoon）。Nash 自身も値を持たない「design token interface」を Investec で実装しており、Issue #2 の提案と同じ発想が標準側と企業側で独立に収斂している（出典: [[Design Tokens Aren’t a Contract]], [[RFC Theming · Issue 2 · design-tokens-community-group · GitHub]]）。詳細は [[デザインシステムの強制と例外]]
+- ただし**仕様が標準化するのは表現（文法）であって義務（どのトークンが存在すべきか）ではない**。「仕様は文法を、契約は各ブランドが埋めるべき語彙リストを与える」——マルチブランド運用には仕様と別に契約層が要る（[[Kevin Muldoon]]）。Nash 自身も値を持たない「design token interface」を Investec で実装しており、Issue #2 の提案と同じ発想が標準側と企業側で独立に収斂している（出典: [[Design Tokens Aren’t a Contract]], [[RFC Theming · Issue 2 · design-tokens-community-group · GitHub]]）。詳細は [[デザインシステムの強制と例外]]
 - 2023年11月時点では Format Modules は「標準化に向けた議論が進行中でまだ標準規格ではない」（出典: [[【デザイン】新規サービス開発でデザイントークンを導入してみました！ Design - Qiita]]）
 - 標準化の意味論: DTCG は語彙の「**著作の負担を継承に変換**」した成熟経路の実例——各組織が独自にトークン語彙を著作（設計・強制）する負担を、標準からの継承に置き換えた（出典: [[Building language for design systems]]）
 - 過渡期への実務的な構え: B/43 は「Format Module と Style Dictionary の利便性の間をとり」、現状は SD でパースできる形式に合わせつつ**将来は文字列置換で DTCG 仕様へ寄せられる形**で設計している——「パラダイムシフトで変更を余儀なくされることを受け入れる」（出典: [[初公開！「家計簿プリカ B-43」のデザイントークンの設計 - inSmartBank]]）

@@ -353,3 +353,25 @@ touched: [[Figma Dev Modeベータ版の案内 - Twitter]] (改名), [[デザイ
 
 touched: [[What happens to the design system when AI changes the product]] (改名), [[What happens to the design system when AI changes the product 要約]] (改名)
 結果: ファイル名から疑問符を除去し、要約目次と参照リンクを更新
+
+## [2026-09-22] 新規クリップ処理 | Clippings 一括処理 25件
+
+touched（新規）: [[Spec Driven Design]], [[非同期中心のデザイン協働]], [[曖昧な仕事の構造化]], [[Kevin Muldoon]]
+touched（更新）: [[AI時代のデザインシステム]], [[デザインシステムのドキュメンテーション]], [[デザインシステムの強制と例外]], [[コンポーネントカタログ]], [[デザインエンジニアリング]], [[存在論的負債]], [[デザインシステムの投資対効果]], [[デザイントークンのツールチェーン]], [[デザインシステムとは何か]], [[コンポーネント設計]], [[デザインシステムの浸透]], [[デザインシステムのガバナンス]], [[セマンティックトークン]], [[スペーシングシステム]], [[カラーシステムの設計]], [[デザインシステムとアクセシビリティ]], [[デザインシステムの立ち上げ]], [[Nathan Curtis]], [[Nate Baldwin]], [[Adobe Spectrum]], [[Material Design]], [[Model Context Protocol]], [[DTCG]], index.md
+要点: 機械可読DSの具体化（判断層メタデータ、契約とスキーマ、決定的生成、トークンMCP＋Figma MCP）／Spec Driven Designの追跡可能な導出連鎖／コンポーネントのBehavior Firstとstructural templates／認知アクセシビリティをジャーニー全体の特性として扱う設計／OKLCHを生成、CIE L*と実測コントラストを測定に使う分離／非同期協働と曖昧な仕事の構造化
+処理: 25記事にtopicタグを設定し、summary 25件を作成、4つのsummaryフォルダ（アクセシビリティ / デザイン・UXリサーチ / 組織・DesignOps / 組織・ハンドオフ）と各00_indexを新設、既存目次を更新後にArticlesへ移動。
+保留: [[Open Knowledge Format のご紹介  Google Cloud 公式ブログ]] と [[OKF（Open Knowledge Format）の仕様を整理してみた]] は同名ファイルがArticlesにあり、2026-08-12に処理済みのためClippingsに残置。[[Beyond the Design System-Designing a Shared Enterprise Ecosystem]] は本文が途中で切れているため、タグ編集・summary作成・移動を行わず再クリップ待ち。
+品質注記: 相互に文章・匿名事例が重複するMedium記事や根拠不明の数値はsummaryには残したが、知識層へは採用せず、既存知識に対する新規性と出典品質が確認できる内容だけを編纂した。
+
+## [2026-09-22] 新規クリップ処理 | 処理中に追加された空クリップ2件
+
+対象: 「何か質問や意見ありますか」の後の無言対策 / AIネイティブを目指した「これまで」と「これから」｜agu  relay（リレイ）
+結果: 2件とも本文が空で、タグ判定・要約・知識編纂ができないため処理を中止。Clippingsに残置し、再クリップ待ち。
+
+## [2026-09-22] 新規クリップ処理 | 再クリップ済み3件
+
+対象: [[「何か質問や意見ありますか」の後の無言対策]], [[AIネイティブを目指した「これまで」と「これから」｜agu  relay（リレイ）]], [[Beyond the Design System-Designing a Shared Enterprise Ecosystem]]
+touched（新規）: [[relay Design System]], 上記3記事のsummary
+touched（更新）: [[非同期中心のデザイン協働]], [[AI時代のデザインシステム]], [[Model Context Protocol]], [[デザインシステムとアクセシビリティ]], [[デザインシステムの強制と例外]], [[デザインシステムとは何か]], [[デザインシステムの階層化]], [[コンポーネント設計]], index.md, summary各目次
+要点: 同期会議の発言コストを下げる参加経路の設計／狩野モデルで当たり前品質・一元的品質・魅力的品質の責任を分け、MCP・hooks・evalsへ接続するrelayの実践／実ワークフローからパターンと原則を抽出し「一貫性はあるが同一ではない」企業横断基盤を作る順序
+処理: 前回は空または途中で切れていた3件の本文が再クリップで揃ったことを確認。topicタグ設定・summary 3件作成・知識編纂・目次更新後、Articlesへ移動。

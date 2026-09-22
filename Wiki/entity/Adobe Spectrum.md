@@ -2,7 +2,7 @@
 type: entity
 entity-type: product
 aliases: [Spectrum]
-updated: 2026-07-12
+updated: 2026-09-22
 ---
 
 # Adobe Spectrum
@@ -18,6 +18,12 @@ Adobe のデザインシステム。主に社内向け（Material のような�
 - **Global**（文脈非依存の原始値。パレット・アニメーション・タイポグラフィ・寸法）/ **Alias**（文脈・抽象への紐付け。単一の意図が複数箇所に現れるときに意図を伝える）/ **Component-specific**（コンポーネントに紐づく全値の網羅的表現。alias を継承し、エンジニアが最大限特定的に適用できる名前を持つ）
 - 使用指針: **Global は控えめに**（デザイン言語のロジックから最も遠く、alias がない場合のみ）。**Alias を使えるところでは常に使う**——Spectrum を理解する「ロゼッタストーン」であり、システムの進化に自動追従して将来の保守を最小化する。Component トークンは当該コンポーネント専用（派生関係がない限り他へ流用しない）
 - サイズトークンは基準値へのパーセントで命名（`size-100` = 100% = デスクトップ 8px / モバイル 10px）し、**2つのプラットフォームスケール**を1つのトークンで自動切替する。境界線太さのようにスケール間で不変の値は `static-size` トークン
+
+## Structural templates — トークンとコンポーネントの中間
+
+Spectrum の協働調査では、デザイナーとエンジニアは余白を抽象的な関係の強弱でなく、「ラベルと入力欄の間」「コンテナ内のpadding」のような構築上の用途で説明した。
+そこでラベル・説明・visual・affordance・group・container・list等の反復構成を **structural templates** として形式化し、構造・可変点・合成関係を先に定め、semantic layout tokensを後から導く方式へ転換した。
+既存コンポーネント間の1〜4px程度の差異を標準化するため、コンポーネント自体の再構築が必要になる場合もあった（出典: [[Design tokens need more than semantics]]）。
 
 ## 設計データの運用 — Garth Braithwaite の証言
 
@@ -52,7 +58,7 @@ Adobe のデザインシステム。主に社内向け（Material のような�
 
 ## 登場するソース
 
-[[Garth Braithwaite on Design Tokens, Governance, and Scaling Spectrum at Adobe  Knapsack]], [[Design tokens - Spectrum]], [[コンポーネントレベルのデザイントークン：価値はあるか？  Nate Baldwin  Medium]], [[Adobe Spectrumのカラーバリエーションを再発明]], [[Adobe製デザインシステム「React Spectrum」がすごいので紹介したい - Qiita]], [[10年ぶりのデザイン言語刷新に乗り出すアドビ　担当者に聞く「Spectrum 2」誕生の経緯と目的｜Real Sound｜リアルサウンド テック]]
+[[Garth Braithwaite on Design Tokens, Governance, and Scaling Spectrum at Adobe  Knapsack]], [[Design tokens - Spectrum]], [[Design tokens need more than semantics]], [[コンポーネントレベルのデザイントークン：価値はあるか？  Nate Baldwin  Medium]], [[Adobe Spectrumのカラーバリエーションを再発明]], [[Adobe製デザインシステム「React Spectrum」がすごいので紹介したい - Qiita]], [[10年ぶりのデザイン言語刷新に乗り出すアドビ　担当者に聞く「Spectrum 2」誕生の経緯と目的｜Real Sound｜リアルサウンド テック]]
 
 ## 関連ページ
 
