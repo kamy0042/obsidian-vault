@@ -80,7 +80,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 805.5
+    "width": 345.75390625
   },
   "right": {
     "id": "172fdca29269d963",
@@ -188,8 +188,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "8579a3a82a865fe4",
+  "active": "343000f48bf2e7d5",
   "lastOpenFiles": [
+    "Wiki/summary/デザインシステム/運用・浸透/デザインシステムのはじめかた―構築の5サイクル - CreatorZine 要約.md",
+    "Articles/デザインシステムのはじめかた―構築の5サイクル - CreatorZine.md",
+    "Articles/Figma Dev Modeベータ版の案内 - Twitter.md",
     "Clippings/Design tokens need more than semantics.md",
     "Clippings/From UI Archaeology to Design System Infrastructure.md",
     "Clippings/8 Underrated Design Systems We Keep Coming Back to for Inspiration.md",
@@ -213,9 +216,6 @@
     "Clippings/How We Built a “Functional” Design System in an Early-Stage Product Team 1.md",
     "Clippings/The Component Library Illusion Why You Don’t Actually Have a Design System.md",
     "Clippings/How We Built a “Functional” Design System in an Early-Stage Product Team.md",
-    "Clippings/Open Knowledge Format のご紹介  Google Cloud 公式ブログ.md",
-    "Clippings/OKF（Open Knowledge Format）の仕様を整理してみた.md",
-    "Clippings/Design system documentation as structured metadata.md",
     "Clippings",
     "Wiki/summary/デザインシステム/AI活用/00_index.md.tmp.33915.ab5ef97e750f",
     "xxx_blog",

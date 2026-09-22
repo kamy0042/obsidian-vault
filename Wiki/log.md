@@ -113,7 +113,7 @@ touched（更新10）: [[Nathan Curtis]] (Tiers・Generations 5部作、sources 
 touched（新規3）: [[デザインシステムとは何か]] (ハブ: 定義群・Mall 6分類・Curtis 3システムと矮小化批判・ブランド×プロダクトのマトリクス・一貫性と認知負荷・歴史・誤解の再設定), [[デザイン原則]] (決める力・ポエム化回避・作りどきの対立), [[Brad Frost]] (entity: Atomic Design・5層エコシステム・Global DS構想)
 touched（更新13）: [[デザインシステムの階層化]] (Frost 5層の詳説・Gall の法則・レシピ=圧力弁とIBM Carbon・スマートコンポーネント・Global DS=メタDS問題), [[AI時代のデザインシステム]] (April 2026: 安定8%問題・MCP=デザイン→エージェント編成・GenUI/Zod制約層・機械可読API化・契約の実行可能化), [[宣言的デザインシステム]] (Achiardi契約説: Meadows・導出連鎖・コンポーネントは使い捨て), [[DTCG]] (v2025.10安定版リリース・複合トークン・鮮度注記), [[デザイントークンの命名]] (機械のための命名・ARIA Patterns既定), [[デザインシステムとアクセシビリティ]] (EAA施行・EN 301 549・WCAG×APCA両対応・CIビルド失敗), [[Adobe Spectrum]] (React Spectrum/react-aria/react-statelyのロジックUI分離、sources 4→5), [[長谷川恭久]] (デザインのシステム論・決める力・Q&A・Automagic #361、sources 4→8), [[デザインシステムのドキュメンテーション]] (Wisdom: スネイプ本・Diátaxis・作る/使う分離・AI訓練可能), [[コンポーネント設計]] (Wisdom: 2つのノブ・作るべきでないコンポーネント・ボックスモデル合意・剪定), [[デザインシステムの世代交代]] (バージョニング作法・破壊改変=症状と向き合う・Sparkbox成熟モデル), [[デザインシステムの立ち上げ]] (小山の いまやる事/将来やる事・NIJIBOX Q&A・Design System Checklist), [[デザインシステムの浸透]] (水野「対話とは我慢」・改修4本柱), [[デザインシステムの投資対効果]] (関連ページ), index.md
 要点: 「標準定義はない」を前提に、定義は6分類（Mall）・3システム（Curtis）・ブランド×プロダクト4象限＋公共（Nobuo）で使い分ける／レゴセット的理解は「製品群」「組織」を落とした矮小化（usagimaru）／一貫性は目的分割と検証を前提に認知負荷を減らす手段で、逆効果もある（seya）／Frost 5層エコシステム（ほぼ全層オプション・Gall の法則）と Global DS 構想（組織間重複＝メタDS問題）／契約説「ライブラリはスナップショット、契約がシステム」／2026年の現在地: DTCG v2025.10・EAA 施行・MCP・GenUI 制約層——DSは「機械可読な API」へ、ただし「非常に安定」は8%のみ
-備考: 取り込み不能（空クリップ）: [[The Design System Guide]]（リンクのみ）, [[The Design System Guide 1]]（画像のみ）。重複クリップ: [[The Design System You Actually Need]] は取り込み済み Han 記事と同一URL、[[The Design System Ecosystem  Big Medium]] は [[The Design System Ecosystem  Brad Frost]] のミラー（bradfrost.com 版を正として ingest）。[[Imperavi]] は製品サイトのクリップで知識ソースにならず対象外。部分クリップ: [[デザインシステムのはじめかた――事前に理解しておきたいポイントや構築のための5つのサイクルとは企業で働くクリエイター向けウェブマガジン「CreatorZine（クリエイタージン）」]]（5サイクル中「調査」までで切れており、価値を届ける観点・形骸化の論点のみ回収）。ingest はこれで12回目、前回 lint から4回経過——次回 lint 推奨（新規ページの被リンク・とは何か/批判論/過剰設計の役割分担の検証）。
+備考: 取り込み不能（空クリップ）: [[The Design System Guide]]（リンクのみ）, [[The Design System Guide 1]]（画像のみ）。重複クリップ: [[The Design System You Actually Need]] は取り込み済み Han 記事と同一URL、[[The Design System Ecosystem  Big Medium]] は [[The Design System Ecosystem  Brad Frost]] のミラー（bradfrost.com 版を正として ingest）。[[Imperavi]] は製品サイトのクリップで知識ソースにならず対象外。部分クリップ: [[デザインシステムのはじめかた―構築の5サイクル - CreatorZine]]（5サイクル中「調査」までで切れており、価値を届ける観点・形骸化の論点のみ回収）。ingest はこれで12回目、前回 lint から4回経過——次回 lint 推奨（新規ページの被リンク・とは何か/批判論/過剰設計の役割分担の検証）。
 
 ## [2026-07-12] ingest | デザインシステム × 実装 差分4本（Tags: topic/デザインシステム × type/実装。タグ一致25本中20本は取り込み済み、空の重複クリップ1）
 
@@ -343,3 +343,8 @@ touched: [[Q. 社内向けデザインシステムのドキュメント構成論
 touched: [[Open Knowledge Format]] (新規), [[Model Context Protocol]] (関連ページ更新), [[OKF（Open Knowledge Format）の仕様を整理してみた 要約]] (新規), [[Open Knowledge Format のご紹介  Google Cloud 公式ブログ 要約]] (新規), [[AI/00_index|AI 目次]] (新規), index.md
 要点: OKF v0.1はLLM-wikiを移植可能にするオープンな知識形式。Knowledge Bundle=ディレクトリ、Concept=YAML frontmatter付きMarkdown、必須はtypeのみ。未知のtype・フィールド・壊れたリンクを許容する寛容な消費モデルと、index/log/Citationsの規約を持つ
 処理: 2記事に topic/AI を先頭タグとして設定し、summary作成・ingest後に Articles へ移動
+
+## [2026-09-22] maintenance | 長大ファイル名の短縮
+
+touched: [[Figma Dev Modeベータ版の案内 - Twitter]] (改名), [[デザインシステムのはじめかた―構築の5サイクル - CreatorZine]] (改名), [[デザインシステムのはじめかた―構築の5サイクル - CreatorZine 要約]] (改名)
+結果: UTF-8で255バイトを超えるファイル名を解消し、要約目次と参照リンクを更新
