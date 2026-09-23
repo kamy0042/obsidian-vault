@@ -4,39 +4,53 @@
     "type": "split",
     "children": [
       {
-        "id": "b5a341cf330dfddb",
+        "id": "8d6ab8393591b1df",
         "type": "tabs",
         "children": [
           {
-            "id": "2c0cdfcd6f3eb497",
+            "id": "f7c41f6754d371f8",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Clippings/Stop using OKLCH lightness for your color scale.md",
+                "file": "Wiki/log.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Stop using OKLCH lightness for your color scale"
+              "title": "log"
             }
           },
           {
-            "id": "b6a6036f9fbb05c9",
+            "id": "3dbe27752c41e019",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Clippings/Beyond the Design System-Designing a Shared Enterprise Ecosystem.md",
+                "file": "The Five Ways Every Design System Quietly Breaks….md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Beyond the Design System-Designing a Shared Enterprise Ecosystem"
+              "title": "The Five Ways Every Design System Quietly Breaks…"
+            }
+          },
+          {
+            "id": "4c6169d6283c8dd0",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Your design system isn’t broken. You’re just confusing its three layers.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Your design system isn’t broken. You’re just confusing its three layers"
             }
           }
         ],
-        "currentTab": 1
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -197,10 +211,12 @@
       "bases:新規ベースを作成": false
     }
   },
-  "active": "5293ff47bda933e3",
+  "active": "4c6169d6283c8dd0",
   "lastOpenFiles": [
+    "Your design system isn’t broken. You’re just confusing its three layers.md",
+    "The Five Ways Every Design System Quietly Breaks….md",
+    "Wiki/log.md",
     "Clippings/Beyond the Design System-Designing a Shared Enterprise Ecosystem.md",
-    "Clippings/Stop using OKLCH lightness for your color scale.md",
-    "Wiki/log.md"
+    "Clippings/Stop using OKLCH lightness for your color scale.md"
   ]
 }
